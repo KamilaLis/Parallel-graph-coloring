@@ -1,0 +1,79 @@
+% !TeX encoding = UTF-8
+% !TeX spellcheck = pl_PL
+\documentclass{article}
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+\usepackage[]{polski}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{geometry}
+ 
+\usepackage{listings}
+\usepackage{color}
+\usepackage{hyperref}
+
+\usepackage{multirow}
+\usepackage{pdfpages}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+	backgroundcolor=\color{backcolour},   
+	commentstyle=\color{black},
+	keywordstyle=\color{blue},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\footnotesize,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	%numbers=left,                    
+	%numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2
+}
+
+\lstset{style=mystyle}
+\date{}
+
+\author{Katarzyna Dziewulska, Kamila Lis}
+
+\title{Równoległe przetwarzanie grafu\\
+	{\large Sprawozdanie 1. projektu}}
+\bibliographystyle{plunsrt}
+
+\begin{document}
+	\maketitle
+	W ramach projektu zostanie zaimplementowany algorytm kolorowania grafu w wersji zwykłej i równoległej. Sugerując się artykułem \cite{article} postanowiono wykorzystać algorytm LDF (Largest-Degree-First). Wersja równoległa zostanie zrealizowana w środowisku CUDA przy wykorzystaniu karty graficznej Nvidia.\\
+	
+	\bibliography{bibliografia}
+
+ 
+%	\begin{table}[H]
+%		\caption{Wartość średnia i mediana dla kolejnych cech w zbiorze uczącym}
+%		\label{}
+%		\begin{tabular}{r|c c c c c c c}
+%			 & 2& 3 &4& 5& 6& 7& 8\\
+%			 \hline
+%			średnia  & 1.8679e-01 &  1.4839e-02 &  2.1045e-01 &  2.0882e-01 &  7.9658e+01  & 1.0604e+00  & 9.0846e-03\\
+%			%\hline
+%			mediana &  1.8259e-01 &  1.4785e-04 &  1.7434e-04 &  1.9996e-06 & -8.9358e-11  & 1.3626e-10 & -1.8427e-14 \\
+%		\end{tabular} 
+%	\end{table}
+
+
+%	\begin{figure}[h]
+%		\centering
+%		\includegraphics[width=1\textwidth]{images/wybor_cech.png}
+%		\caption{Wykres wartości cech 2 i 4.}
+%		\label{24}	
+%	\end{figure}
+
+\end{document}
