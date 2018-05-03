@@ -45,13 +45,55 @@
 
 \author{Katarzyna Dziewulska, Kamila Lis}
 
-\title{Równoległe przetwarzanie grafu\\
-	{\large Sprawozdanie 1. projektu}}
+\title{Równoległe przetwarzanie grafu}
+	%\\{\large Sprawozdanie 1. projektu}}
 \bibliographystyle{plunsrt}
 
 \begin{document}
 	\maketitle
 	W ramach projektu zostanie zaimplementowany algorytm kolorowania grafu w wersji zwykłej i równoległej. Sugerując się artykułem \cite{article} postanowiono wykorzystać algorytm LDF (Largest-Degree-First). Wersja równoległa zostanie zrealizowana w środowisku CUDA przy wykorzystaniu karty graficznej Nvidia.\\
+	
+	\section{Algorytm kolorowania}
+	Kolorowanie wierzchołków polega na  przydzielaniu kolorów wierzchołkom tak, że by dwa sąsiednie wierzchołki otrzymały różne kolory. Najmniejsza liczba kolorów $k$ nazywana jest liczbą chromatyczną i oznaczana jako $X(G)$. W celu reprezentacji pokolorowania przyjęło się oznaczać kolory kolejnymi liczbami naturalnymi. Kolorowanie grafów najczęściej wykorzystywane jest do poszukiwania rozwiązań, w których unika się konfliktów. Strategie kolorowania grafu zależą od stawianych wymagań. Celem optymalnego kolorowania jest minimalizacja liczby użytych kolorów, podczas gdy kolorowanie zbalansowane dąży do zapewnienia podobnej liczby wierzchołków w każdym kolorze.
+	\subsection{Largest First}
+	Algorytm LDF (ang. \textit{Largest-Degree-First}) jest z zasady algorytmem sekwencyjnym, w którym wierzchołki są przeglądane i kolorowane według nierosnących stopni wierzchołkowych (wierzchołek o największym stopniu jest kolorowany pierwszy). Algorytm ma celu minimalizowanie maksymalnej liczby wykorzystanych kolorów.
+	
+	\subsection{Metoda równoległa}
+	Równoległe metody kolorowania grafów są oparte na obserwacji, że każdy niezależny zbiór wierzchołków, czyli taki w którym nie ma żadnych wierzchołków sąsiadujących ze sobą, może być kolorowany równolegle. Różnice pomiędzy metodami sprowadzają się do sposobu wyboru niezależnego zbioru i samego kolorowania wierzchołków. Niezależny zbiór wierzchołków jest konstruowany jako podgraf indukowany zawierający jedynie niepokolorowane wierzchołki.
+	
+%For ecient implementation on distributed
+%memory parallel computers, the information must also be local in the processor grid , so
+%that the amount of communication is minimized. This means that the distribution of the
+%graph over processors must be such that the number of edges crossing processor boundaries
+%is minimized. This is the standard graph partitioning problem[]
+
+	Algorytm LF może być zrównoleglony poprzez 	 znajdowanie zbióru niezależnych wierzchołków równolegle używając metody Luby (?) wybierania wierzchołków, których stopnie są lokalnymi maksymami.
+	%[podobnie do Jonesa-Plassmanna tylko zamiast używania losowych wag do stworzenia niezależnego zbioru wagi są stopniami wierzchołków indukowanego podgrafu]. Liczby losowe są tylko używane do rozwiązania konfliktów między sąsiadującymi wierzchołkami o takich samych stopniach.
+	Każdy z wierzchołków ma przydzielone trzy parametry:
+	\begin{itemize}
+		\itemsep0em
+		\item swój stopień $deg(v)$,
+		\item losową wartość $rndvalue(v)$, 
+		\item listę zakazanych kolorów użytych już przez sąsiadów $usedcolor(v)$. 
+	\end{itemize}   
+	\begin{enumerate}
+		\item losowo przydziel $rndvalue(v)$ oraz określ $deg(v)$ każdego wierzchołka,
+		\item dla każdego wierzchołka sprawdź stopnie jego sąsiadów, jeśli aktualny posiada największy przydziel kolor,
+		\item konflikty stopni rozwiązywane są przez wybór największej liczby $rndvalue(v)$
+	\end{enumerate}
+	\begin{lstlisting}
+	
+	U:=V
+	while (|U|>0) do in parallel
+		choose an independent set I from U
+		color all vertices in I
+		U:=U-I
+	end do
+	\end{lstlisting}
+ 
+	\section{Struktury danych}
+	\section{Projekty testów}
+	\section{Założenia programu}
 	
 	\bibliography{bibliografia}
 
