@@ -51,7 +51,7 @@
 
 \begin{document}
 	\maketitle
-	W ramach projektu zostanie zaimplementowany algorytm kolorowania grafu w wersji zwykłej i równoległej. Sugerując się artykułem \cite{article} postanowiono wykorzystać algorytm LDF (Largest-Degree-First). Wersja równoległa zostanie zrealizowana w środowisku CUDA przy wykorzystaniu karty graficznej Nvidia.\\
+	W ramach projektu zostanie zaimplementowany algorytm kolorowania grafu w wersji zwykłej i równoległej. Sugerując się artykułem \cite{article} postanowiono wykorzystać algorytm LDF (Largest-Degree-First). Wersja równoległa zostanie zrealizowana w architekturze CUDA przy wykorzystaniu karty graficznej Nvidia.\\
 	
 	\section{Algorytm kolorowania}
 	Kolorowanie wierzchołków polega na  przydzielaniu kolorów wierzchołkom tak, że by dwa sąsiednie wierzchołki otrzymały różne kolory. Najmniejsza liczba kolorów $k$ nazywana jest liczbą chromatyczną i oznaczana jako $X(G)$. W celu reprezentacji pokolorowania przyjęło się oznaczać kolory kolejnymi liczbami naturalnymi. Kolorowanie grafów najczęściej wykorzystywane jest do poszukiwania rozwiązań, w których unika się konfliktów. Strategie kolorowania grafu zależą od stawianych wymagań. Celem optymalnego kolorowania jest minimalizacja liczby użytych kolorów, podczas gdy kolorowanie zbalansowane dąży do zapewnienia podobnej liczby wierzchołków w każdym kolorze.
@@ -69,13 +69,7 @@
 
 	Algorytm LF może być zrównoleglony poprzez 	 znajdowanie zbióru niezależnych wierzchołków równolegle używając metody Luby (?) wybierania wierzchołków, których stopnie są lokalnymi maksymami.
 	%[podobnie do Jonesa-Plassmanna tylko zamiast używania losowych wag do stworzenia niezależnego zbioru wagi są stopniami wierzchołków indukowanego podgrafu]. Liczby losowe są tylko używane do rozwiązania konfliktów między sąsiadującymi wierzchołkami o takich samych stopniach.
-	Każdy z wierzchołków ma przydzielone trzy parametry:
-	\begin{itemize}
-		\itemsep0em
-		\item swój stopień $deg(v)$,
-		\item losową wartość $rndvalue(v)$, 
-		\item listę zakazanych kolorów użytych już przez sąsiadów $usedcolor(v)$. 
-	\end{itemize}   
+  
 	\begin{enumerate}
 		\item losowo przydziel $rndvalue(v)$ oraz określ $deg(v)$ każdego wierzchołka,
 		\item dla każdego wierzchołka sprawdź stopnie jego sąsiadów, jeśli aktualny posiada największy przydziel kolor,
@@ -92,7 +86,19 @@
 	\end{lstlisting}
  
 	\section{Struktury danych}
+	Pierwszym krokiem do rozwiązania problemu kolorowania grafu jest znalezienie odpowiedniej struktury danych najlepiej opisującej strukturę grafu. W artykule \cite{Shen2017} autorzy sugerują wykorzystanie macierzy sąsiedztwa jako odpowiednią dla skomplikowanych algorytmów. Natomiast w \cite{SINGH20155} zauważono, że macierz sąsiedztwa marnuje dużo pamięci w przypadku ,,rzadkiego'' wykresu, lista sąsiedztwa byłaby lepszym sposobem reprezentacji takiego wykresu. W GPU CUDA uzyskuje dostęp do pamięci w tablicy, więc z powodu różnej wielkości listy krawędzi trudnej jest korzystać z listy sąsiedztwa. Możliwym rozwiązaniem jest wykorzystanie trzech tablic:
+	\begin{enumerate}
+		\item 
+	\end{enumerate}
 	
+	
+	Każdy z wierzchołków ma przydzielone trzy parametry:
+	\begin{itemize}
+		\itemsep0em
+		\item swój stopień $deg(v)$,
+		\item losową wartość $rndvalue(v)$, 
+		\item listę zakazanych kolorów użytych już przez sąsiadów $usedcolor(v)$. 
+	\end{itemize} 
 	
 	\section{Projekty testów}
 	\section{Założenia programu}
