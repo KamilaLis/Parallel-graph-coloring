@@ -56,7 +56,7 @@
 	\section{Algorytm kolorowania}
 	Kolorowanie wierzchołków polega na  przydzielaniu kolorów wierzchołkom tak, że by dwa sąsiednie wierzchołki otrzymały różne kolory. Najmniejsza liczba kolorów $k$ nazywana jest liczbą chromatyczną i oznaczana jako $X(G)$. W celu reprezentacji pokolorowania przyjęło się oznaczać kolory kolejnymi liczbami naturalnymi. Kolorowanie grafów najczęściej wykorzystywane jest do poszukiwania rozwiązań, w których unika się konfliktów. Strategie kolorowania grafu zależą od stawianych wymagań. Celem optymalnego kolorowania jest minimalizacja liczby użytych kolorów, podczas gdy kolorowanie zbalansowane dąży do zapewnienia podobnej liczby wierzchołków w każdym kolorze.
 	\subsection{Largest First}
-	Algorytm LDF (ang. \textit{Largest-Degree-First}) jest z zasady algorytmem sekwencyjnym, w którym wierzchołki są przeglądane i kolorowane według nierosnących stopni wierzchołkowych (wierzchołek o największym stopniu jest kolorowany pierwszy). Algorytm ma celu minimalizowanie maksymalnej liczby wykorzystanych kolorów.
+	Algorytm LDF (ang. \textit{Largest-Degree-First}) jest algorytmem sekwencyjnym, w którym wierzchołki są przeglądane i kolorowane według nierosnących stopni wierzchołkowych (wierzchołek o największym stopniu jest kolorowany pierwszy). Algorytm ma celu minimalizowanie maksymalnej liczby wykorzystanych kolorów.
 	
 	\subsection{Metoda równoległa}
 	Równoległe metody kolorowania grafów są oparte na obserwacji, że każdy niezależny zbiór wierzchołków, czyli taki w którym nie ma żadnych wierzchołków sąsiadujących ze sobą, może być kolorowany równolegle. Różnice pomiędzy metodami sprowadzają się do sposobu wyboru niezależnego zbioru i samego kolorowania wierzchołków. Niezależny zbiór wierzchołków jest konstruowany jako podgraf indukowany zawierający jedynie niepokolorowane wierzchołki.
@@ -92,6 +92,8 @@
 	\end{lstlisting}
  
 	\section{Struktury danych}
+	
+	
 	\section{Projekty testów}
 	\section{Założenia programu}
 	
