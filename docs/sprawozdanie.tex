@@ -86,10 +86,25 @@
 	\end{lstlisting}
  
 	\section{Struktury danych}
-	Pierwszym krokiem do rozwiązania problemu kolorowania grafu jest znalezienie odpowiedniej struktury danych najlepiej opisującej strukturę grafu. W artykule \cite{Shen2017} autorzy sugerują wykorzystanie macierzy sąsiedztwa jako odpowiednią dla skomplikowanych algorytmów. Natomiast w \cite{SINGH20155} zauważono, że macierz sąsiedztwa marnuje dużo pamięci w przypadku ,,rzadkiego'' wykresu, lista sąsiedztwa byłaby lepszym sposobem reprezentacji takiego wykresu. W GPU CUDA uzyskuje dostęp do pamięci w tablicy, więc z powodu różnej wielkości listy krawędzi trudnej jest korzystać z listy sąsiedztwa. Możliwym rozwiązaniem jest wykorzystanie trzech tablic:
-	\begin{enumerate}
-		\item 
-	\end{enumerate}
+	Pierwszym krokiem do rozwiązania problemu kolorowania grafu jest znalezienie odpowiedniej struktury danych najlepiej opisującej strukturę grafu. W artykule \cite{Shen2017} autorzy sugerują wykorzystanie macierzy sąsiedztwa jako odpowiednią dla skomplikowanych algorytmów. Natomiast w \cite{SINGH20155} zauważono, że macierz sąsiedztwa marnuje dużo pamięci w przypadku ,,rzadkiego'' wykresu, lista sąsiedztwa byłaby lepszym sposobem reprezentacji takiego wykresu. W GPU CUDA uzyskuje dostęp do pamięci w tablicy, więc z powodu różnej wielkości listy krawędzi trudnej jest korzystać z listy sąsiedztwa. Możliwym rozwiązaniem jest wykorzystanie biblioteki nvGRAPH napisane z myślą o algorytmach grafowych. Struktura grafowa jest zależna od wybranej topologii.
+	\begin{lstlisting}
+	
+	struct nvgraphCSRTopology32I_st {
+		int nvertices;
+		int nedges;
+		int *source_offsets;
+		int *destination_indices;
+	};
+	typedef struct nvgraphCSRTopology32I_st *nvgraphCSRTopology32I_t;
+	\end{lstlisting}
+	gdzie
+	\begin{itemize}
+		\itemsep0em
+		\item \texttt{nvertices} -- liczba wierzchołków grafu
+		\item \texttt{nedges} -- liczba krawędzi grafu
+		\item \texttt{source\_offsets} -- tablica o rozmiarze $nvertices+1$ , gdzie $i$-ty element to numer indeksu pierwszej z krawędzi wychodzących z tego wierzchołka w tablicy krawędzi $destination\_indices$; ostatni element przechowuje liczbę wszystkich krawędzi
+		\item \texttt{destination\_indices} -- tablica o rozmiarze $nedges$, gdzie każda wartość to numer wierzchołka, do którego dochodzi krawędź
+	\end{itemize}
 	
 	
 	Każdy z wierzchołków ma przydzielone trzy parametry:
