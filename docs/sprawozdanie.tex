@@ -55,38 +55,60 @@
 	
 	\section{Algorytm kolorowania}
 	Kolorowanie wierzchołków polega na  przydzielaniu kolorów wierzchołkom tak, że by dwa sąsiednie wierzchołki otrzymały różne kolory. Najmniejsza liczba kolorów $k$ nazywana jest liczbą chromatyczną i oznaczana jako $X(G)$. W celu reprezentacji pokolorowania przyjęło się oznaczać kolory kolejnymi liczbami naturalnymi. Kolorowanie grafów najczęściej wykorzystywane jest do poszukiwania rozwiązań, w których unika się konfliktów. Strategie kolorowania grafu zależą od stawianych wymagań. Celem optymalnego kolorowania jest minimalizacja liczby użytych kolorów, podczas gdy kolorowanie zbalansowane dąży do zapewnienia podobnej liczby wierzchołków w każdym kolorze.
-	\subsection{Largest First}
-	Algorytm LDF (ang. \textit{Largest-Degree-First}) jest algorytmem sekwencyjnym, w którym wierzchołki są przeglądane i kolorowane według nierosnących stopni wierzchołkowych (wierzchołek o największym stopniu jest kolorowany pierwszy). Algorytm ma celu minimalizowanie maksymalnej liczby wykorzystanych kolorów.
+	\subsection{Sekwencyjny Largest Degree First}
+	Algorytm LF (ang. \textit{Largest-Degree-First}) koloruje wierzchołki w kolejności zgodnej z ich stopniami -- wierzchołki są przeglądane i kolorowane według nierosnących stopni wierzchołkowych (wierzchołek o największym stopniu jest kolorowany pierwszy). Algorytm ma celu minimalizowanie maksymalnej liczby wykorzystanych kolorów. 
+	
+	Jego podstawowa, sekwencyjna wersja, zakłada następujące kroki:
+	\begin{enumerate}
+		\itemsep0em
+		\item przydziel wartość losową oraz określ stopień każdego wierzchołka,
+		\item dla każdego wierzchołka sprawdź stopnie jego sąsiadów, jeśli aktualny posiada największy przydziel kolor,
+		\item konflikty stopni rozwiązywane są przez wybór wierzchołka o największej liczbie losowej
+	\end{enumerate}
 	
 	\subsection{Metoda równoległa}
-	Równoległe metody kolorowania grafów są oparte na obserwacji, że każdy niezależny zbiór wierzchołków, czyli taki w którym nie ma żadnych wierzchołków sąsiadujących ze sobą, może być kolorowany równolegle. Różnice pomiędzy metodami sprowadzają się do sposobu wyboru niezależnego zbioru i samego kolorowania wierzchołków. Niezależny zbiór wierzchołków jest konstruowany jako podgraf indukowany zawierający jedynie niepokolorowane wierzchołki.
+	Równoległe metody kolorowania grafów są oparte na obserwacji, że każdy niezależny zbiór wierzchołków, czyli taki w którym nie ma żadnych wierzchołków sąsiadujących ze sobą, może być kolorowany równolegle. Różnice pomiędzy metodami sprowadzają się do sposobu wyboru niezależnego zbioru i samego kolorowania wierzchołków. Niezależny zbiór wierzchołków jest konstruowany jako podgraf indukowany zawierający jedynie niepokolorowane wierzchołki. Najogólniej procedurę tę można przedstawić następująco:
+	\begin{lstlisting}
 	
+	while (|G|>0) do in parallel
+		choose an independent set U from G
+		color all vertices in U
+		G:=G-U
+	end do
+	\end{lstlisting}
+	
+	Do dalszego opisu przyjmijmy nomenklaturę zaproponowaną w \cite{gis}:\\
+	$U$ -- zbiór niezależnych wierzchołków,\\
+	$W$ -- zbiór niepokolorowanych wierzchołków,\\
+	$X$ -- podzbiór $W$ wierzchołków niebędących sąsiadami żadnego wierzchołka z $U$.
+	
+	Algorytm LF może zostać zrównoleglony poprzez równoległe znajdowanie zbioru niezależnych wierzchołków. poprzez wybieranie wierzchołków, których stopnie są lokalnymi maksymami.
+	Reguła konstrukcji zbiorów niezależnych w przypadku RLF (ang. \textit{Recursive Largest First}) jest następująca: jako pierwszy wierzchołek każdego nowo tworzonego zbioru niezależnego jest wybierany wierzchołek o największym stopniu w podgrafie $G[W]$. Następnymi wierzchołkami dołączanymi do zbioru niezależnego są te, które mają najwięcej sąsiadów w zbiorze $W\verb|\|X$.
+	\begin{lstlisting}
+	
+	while (|G|>0) do
+		for all vertices v in G do in parallel
+			U:={v such that deg(v)>deg(u) for all neighbors u in W\X}
+			for all vertices v' in U do in parallel
+				S:={colors of all neighbors of v'}
+				c(v'):=minimum color not in S
+			end do
+		end do
+		G:=G-U
+	end do
+	\end{lstlisting}
 %For ecient implementation on distributed
 %memory parallel computers, the information must also be local in the processor grid , so
 %that the amount of communication is minimized. This means that the distribution of the
 %graph over processors must be such that the number of edges crossing processor boundaries
 %is minimized. This is the standard graph partitioning problem[]
 
-	Algorytm LF może być zrównoleglony poprzez 	 znajdowanie zbióru niezależnych wierzchołków równolegle używając metody Luby (?) wybierania wierzchołków, których stopnie są lokalnymi maksymami.
-	%[podobnie do Jonesa-Plassmanna tylko zamiast używania losowych wag do stworzenia niezależnego zbioru wagi są stopniami wierzchołków indukowanego podgrafu]. Liczby losowe są tylko używane do rozwiązania konfliktów między sąsiadującymi wierzchołkami o takich samych stopniach.
   
-	\begin{enumerate}
-		\item losowo przydziel $rndvalue(v)$ oraz określ $deg(v)$ każdego wierzchołka,
-		\item dla każdego wierzchołka sprawdź stopnie jego sąsiadów, jeśli aktualny posiada największy przydziel kolor,
-		\item konflikty stopni rozwiązywane są przez wybór największej liczby $rndvalue(v)$
-	\end{enumerate}
-	\begin{lstlisting}
-	
-	U:=V
-	while (|U|>0) do in parallel
-		choose an independent set I from U
-		color all vertices in I
-		U:=U-I
-	end do
-	\end{lstlisting}
+
+
  
 	\section{Struktury danych}
-	Pierwszym krokiem do rozwiązania problemu kolorowania grafu jest znalezienie odpowiedniej struktury danych najlepiej opisującej strukturę grafu. W artykule \cite{Shen2017} autorzy sugerują wykorzystanie macierzy sąsiedztwa jako odpowiednią dla skomplikowanych algorytmów. Natomiast w \cite{SINGH20155} zauważono, że macierz sąsiedztwa marnuje dużo pamięci w przypadku ,,rzadkiego'' wykresu, lista sąsiedztwa byłaby lepszym sposobem reprezentacji takiego wykresu. W GPU CUDA uzyskuje dostęp do pamięci w tablicy, więc z powodu różnej wielkości listy krawędzi trudnej jest korzystać z listy sąsiedztwa. Możliwym rozwiązaniem jest wykorzystanie biblioteki nvGRAPH napisane z myślą o algorytmach grafowych. Struktura grafowa jest zależna od wybranej topologii.
+	Pierwszym krokiem do rozwiązania problemu kolorowania grafu jest znalezienie odpowiedniej struktury danych najlepiej opisującej strukturę grafu. W artykule \cite{Shen2017} autorzy sugerują wykorzystanie macierzy sąsiedztwa jako odpowiedniej reprezentacji dla skomplikowanych algorytmów. Natomiast w \cite{SINGH20155} zauważono, że macierz sąsiedztwa marnuje dużo pamięci w przypadku ,,rzadkiego'' wykresu, dlatego lista sąsiedztwa byłaby lepszym sposobem reprezentacji takiego wykresu. W GPU CUDA uzyskuje dostęp do pamięci w tablicy, więc z powodu różnej wielkości listy krawędzi trudnej jest korzystać z listy sąsiedztwa. Możliwym rozwiązaniem jest wykorzystanie biblioteki nvGRAPH napisanej z myślą o algorytmach grafowych. Struktura grafowa jest zależna od wybranej topologii. Przykładowo:
 	\begin{lstlisting}
 	
 	struct nvgraphCSRTopology32I_st {
@@ -103,17 +125,16 @@
 		\item \texttt{nvertices} -- liczba wierzchołków grafu
 		\item \texttt{nedges} -- liczba krawędzi grafu
 		\item \texttt{source\_offsets} -- tablica o rozmiarze $nvertices+1$ , gdzie $i$-ty element to numer indeksu pierwszej z krawędzi wychodzących z tego wierzchołka w tablicy krawędzi $destination\_indices$; ostatni element przechowuje liczbę wszystkich krawędzi
-		\item \texttt{destination\_indices} -- tablica o rozmiarze $nedges$, gdzie każda wartość to numer wierzchołka, do którego dochodzi krawędź
+		\item \texttt{destination\_indices} -- tablica o rozmiarze $nedges$, gdzie każda wartość to numer wierzchołka, do którego dochodzi $i$-ta krawędź
 	\end{itemize}
-	
-	
-	Każdy z wierzchołków ma przydzielone trzy parametry:
+	Listy wierzchołków i krawędzi pozwalają nam na określenie, które wierzchołki sąsiadują ze sobą. Dla implementacji algorytmu LF każdy z wierzchołków powinien być dodatkowo opisany przez trzy parametry:
 	\begin{itemize}
 		\itemsep0em
 		\item swój stopień $deg(v)$,
 		\item losową wartość $rndvalue(v)$, 
 		\item listę zakazanych kolorów użytych już przez sąsiadów $usedcolor(v)$. 
-	\end{itemize} 
+	\end{itemize}
+	Dla grafów nieskierowanych stopniem wierzchołka będzie liczba wszystkich incydentnych krawędzi, a tym samym różnica między $i$ i $i+1$ wartością w tablicy wierzchołków. Wartość losowa może zostać wylosowana i przydzielona raz, na początku działania programu. Lista zakazanych kolorów może zostać zastąpiona całkowitą liczbą naturalną oznaczającą następny kolor do wykorzystania (zakładając, że rozpoczynamy od ,,koloru'' 0, a następne określamy przez inkrementację). Parametry te można utożsamić z wierzchołkami przy wykorzystaniu funkcji \texttt{nvgraphAllocateVertexData} oraz \texttt{nvgraphSetVertexData}.
 	
 	\section{Projekty testów}
 	\section{Założenia programu}
