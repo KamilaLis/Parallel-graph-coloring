@@ -9,6 +9,7 @@
 \usepackage{amsmath}
 \usepackage{geometry}
  
+\usepackage[ruled,vlined]{algorithm2e}
 \usepackage{listings}
 \usepackage{color}
 \usepackage{hyperref}
@@ -51,23 +52,40 @@
 
 \begin{document}
 	\maketitle
-	W ramach projektu zostanie zaimplementowany algorytm kolorowania grafu w wersji zwykłej i równoległej. Sugerując się artykułem \cite{article} postanowiono wykorzystać algorytm LDF (Largest-Degree-First). Wersja równoległa zostanie zrealizowana w architekturze CUDA przy wykorzystaniu karty graficznej Nvidia.\\
+	W ramach projektu zostanie zaimplementowany algorytm kolorowania grafu w~wersji zwykłej i~równoległej. Sugerując się artykułem \cite{article} postanowiono wykorzystać algorytm LDF (Largest-Degree-First). Wersja równoległa zostanie zrealizowana w~architekturze CUDA przy wykorzystaniu karty graficznej Nvidia.\\
 	
 	\section{Algorytm kolorowania}
-	Kolorowanie wierzchołków polega na  przydzielaniu kolorów wierzchołkom tak, że by dwa sąsiednie wierzchołki otrzymały różne kolory. Najmniejsza liczba kolorów $k$ nazywana jest liczbą chromatyczną i oznaczana jako $X(G)$. W celu reprezentacji pokolorowania przyjęło się oznaczać kolory kolejnymi liczbami naturalnymi. Kolorowanie grafów najczęściej wykorzystywane jest do poszukiwania rozwiązań, w których unika się konfliktów. Strategie kolorowania grafu zależą od stawianych wymagań. Celem optymalnego kolorowania jest minimalizacja liczby użytych kolorów, podczas gdy kolorowanie zbalansowane dąży do zapewnienia podobnej liczby wierzchołków w każdym kolorze.
+	Kolorowanie wierzchołków polega na  przydzielaniu kolorów wierzchołkom tak, że by dwa sąsiednie wierzchołki otrzymały różne kolory. Najmniejsza liczba kolorów $k$ nazywana jest liczbą chromatyczną. W~celu reprezentacji pokolorowania przyjęło się oznaczać kolory kolejnymi liczbami naturalnymi. Kolorowanie grafów najczęściej wykorzystywane jest do poszukiwania rozwiązań, w~których unika się konfliktów. Strategie kolorowania grafu zależą od stawianych wymagań. Celem optymalnego kolorowania jest minimalizacja liczby użytych kolorów, podczas gdy kolorowanie zbalansowane dąży do zapewnienia podobnej liczby wierzchołków w~każdym kolorze.
 	\subsection{Sekwencyjny Largest Degree First}
-	Algorytm LF (ang. \textit{Largest-Degree-First}) koloruje wierzchołki w kolejności zgodnej z ich stopniami -- wierzchołki są przeglądane i kolorowane według nierosnących stopni wierzchołkowych (wierzchołek o największym stopniu jest kolorowany pierwszy). Algorytm ma celu minimalizowanie maksymalnej liczby wykorzystanych kolorów. 
+	Algorytm LF (ang. \textit{Largest-Degree-First}) koloruje wierzchołki w~kolejności zgodnej z~ich stopniami -- wierzchołki są przeglądane i~kolorowane według nierosnących stopni wierzchołkowych. Algorytm ma celu minimalizowanie maksymalnej liczby wykorzystanych kolorów. 
 	
-	Jego podstawowa, sekwencyjna wersja, zakłada następujące kroki:
+	Jego podstawowa, sekwencyjna wersja, zakłada następujące kroki dla każdego wierzchołka:
 	\begin{enumerate}
 		\itemsep0em
-		\item przydziel wartość losową oraz określ stopień każdego wierzchołka,
-		\item dla każdego wierzchołka sprawdź stopnie jego sąsiadów, jeśli aktualny posiada największy przydziel kolor,
-		\item konflikty stopni rozwiązywane są przez wybór wierzchołka o największej liczbie losowej
+		\item przydziel wartość losową oraz określ stopień  wierzchołka,
+		\item sprawdź stopnie jego sąsiadów, jeśli aktualny posiada największy przydziel kolor.
 	\end{enumerate}
+	Konflikty stopni (kilka wierzchołków o tym samym stopniu) rozwiązywane są przez wybór wierzchołka o~największej liczbie losowej.
 	
 	\subsection{Metoda równoległa}
-	Równoległe metody kolorowania grafów są oparte na obserwacji, że każdy niezależny zbiór wierzchołków, czyli taki w którym nie ma żadnych wierzchołków sąsiadujących ze sobą, może być kolorowany równolegle. Różnice pomiędzy metodami sprowadzają się do sposobu wyboru niezależnego zbioru i samego kolorowania wierzchołków. Niezależny zbiór wierzchołków jest konstruowany jako podgraf indukowany zawierający jedynie niepokolorowane wierzchołki. Najogólniej procedurę tę można przedstawić następująco:
+	Równoległe metody kolorowania grafów są oparte na obserwacji, że każdy niezależny zbiór wierzchołków, czyli taki w~którym nie ma żadnych wierzchołków sąsiadujących ze sobą, może być kolorowany równolegle. Różnice pomiędzy metodami sprowadzają się do sposobu wyboru niezależnego zbioru i~samego kolorowania wierzchołków. Niezależny zbiór wierzchołków jest konstruowany jako podgraf indukowany zawierający jedynie niepokolorowane wierzchołki. Najogólniej procedurę równoległego kolorowania można przedstawić następująco:\\
+	\begin{algorithm}[H]
+		\SetAlgoLined
+%		\KwResult{Write here the result }
+%		initialization\;
+		\While{$|G|>0$}{
+			z grafu $G$ wybierz zbiór niezależnych wierzchołków $U$\;
+			koloruj wszystkie wierzchołki z $U$\;
+			$G:=G-U$\;
+%			\eIf{condition}{
+%				instructions1\;
+%				instructions2\;
+%			}{
+%			instructions3\;
+%		}
+	}
+	\caption{Kolorowanie równoległe}
+\end{algorithm}
 	\begin{lstlisting}
 	
 	while (|G|>0) do in parallel
@@ -77,13 +95,13 @@
 	end do
 	\end{lstlisting}
 	
-	Do dalszego opisu przyjmijmy nomenklaturę zaproponowaną w \cite{gis}:\\
+	Do dalszego opisu przyjmijmy nomenklaturę zaproponowaną w~\cite{gis}:\\
 	$U$ -- zbiór niezależnych wierzchołków,\\
 	$W$ -- zbiór niepokolorowanych wierzchołków,\\
-	$X$ -- podzbiór $W$ wierzchołków niebędących sąsiadami żadnego wierzchołka z $U$.
+	$X$ -- podzbiór $W$ wierzchołków niebędących sąsiadami żadnego wierzchołka z~$U$.
 	
-	Algorytm LF może zostać zrównoleglony poprzez równoległe znajdowanie zbioru niezależnych wierzchołków. poprzez wybieranie wierzchołków, których stopnie są lokalnymi maksymami.
-	Reguła konstrukcji zbiorów niezależnych w przypadku RLF (ang. \textit{Recursive Largest First}) jest następująca: jako pierwszy wierzchołek każdego nowo tworzonego zbioru niezależnego jest wybierany wierzchołek o największym stopniu w podgrafie $G[W]$. Następnymi wierzchołkami dołączanymi do zbioru niezależnego są te, które mają najwięcej sąsiadów w zbiorze $W\verb|\|X$.
+	Algorytm LF może zostać zrównoleglony poprzez równoległe znajdowanie zbiorów niezależnych wierzchołków. poprzez wybieranie wierzchołków, których stopnie są lokalnymi maksymami.
+	Reguła konstrukcji zbiorów niezależnych w~przypadku RLF (ang. \textit{Recursive Largest First}) jest następująca: jako pierwszy wierzchołek każdego nowo tworzonego zbioru niezależnego jest wybierany wierzchołek o~największym stopniu w~podgrafie $G[W]$. Następnymi wierzchołkami dołączanymi do zbioru niezależnego są te, które mają najwięcej sąsiadów w~zbiorze $W\verb|\|X$.
 	\begin{lstlisting}
 	
 	while (|G|>0) do
@@ -108,7 +126,7 @@
 
  
 	\section{Struktury danych}
-	Pierwszym krokiem do rozwiązania problemu kolorowania grafu jest znalezienie odpowiedniej struktury danych najlepiej opisującej strukturę grafu. W artykule \cite{Shen2017} autorzy sugerują wykorzystanie macierzy sąsiedztwa jako odpowiedniej reprezentacji dla skomplikowanych algorytmów. Natomiast w \cite{SINGH20155} zauważono, że macierz sąsiedztwa marnuje dużo pamięci w przypadku ,,rzadkiego'' wykresu, dlatego lista sąsiedztwa byłaby lepszym sposobem reprezentacji takiego wykresu. W GPU CUDA uzyskuje dostęp do pamięci w tablicy, więc z powodu różnej wielkości listy krawędzi trudnej jest korzystać z listy sąsiedztwa. Możliwym rozwiązaniem jest wykorzystanie biblioteki nvGRAPH napisanej z myślą o algorytmach grafowych. Struktura grafowa jest zależna od wybranej topologii. Przykładowo:
+	Pierwszym krokiem do rozwiązania problemu kolorowania grafu jest znalezienie odpowiedniej struktury danych najlepiej opisującej strukturę grafu. W~artykule \cite{Shen2017} autorzy sugerują wykorzystanie macierzy sąsiedztwa jako odpowiedniej reprezentacji dla skomplikowanych algorytmów. Natomiast w~\cite{SINGH20155} zauważono, że macierz sąsiedztwa marnuje dużo pamięci w~przypadku ,,rzadkiego'' grafu, dlatego lista sąsiedztwa byłaby lepszym sposobem reprezentacji takiego grafu. W~GPU CUDA uzyskuje dostęp do pamięci w~tablicy, więc z~powodu różnej wielkości listy krawędzi trudnej jest korzystać z~listy sąsiedztwa. Możliwym rozwiązaniem jest wykorzystanie biblioteki nvGRAPH napisanej z~myślą o~algorytmach grafowych. Struktura grafowa jest zależna od wybranej topologii. Przykładowo:
 	\begin{lstlisting}
 	
 	struct nvgraphCSRTopology32I_st {
@@ -124,27 +142,27 @@
 		\itemsep0em
 		\item \texttt{nvertices} -- liczba wierzchołków grafu
 		\item \texttt{nedges} -- liczba krawędzi grafu
-		\item \texttt{source\_offsets} -- tablica o rozmiarze $nvertices+1$ , gdzie $i$-ty element to numer indeksu pierwszej z krawędzi wychodzących z tego wierzchołka w tablicy krawędzi $destination\_indices$; ostatni element przechowuje liczbę wszystkich krawędzi
-		\item \texttt{destination\_indices} -- tablica o rozmiarze $nedges$, gdzie każda wartość to numer wierzchołka, do którego dochodzi $i$-ta krawędź
+		\item \texttt{source\_offsets} -- tablica o~rozmiarze $nvertices+1$ , gdzie $i$-ty element to numer indeksu pierwszej z~krawędzi wychodzących z~tego wierzchołka w~tablicy krawędzi $destination\_indices$; ostatni element przechowuje liczbę wszystkich krawędzi
+		\item \texttt{destination\_indices} -- tablica o~rozmiarze $nedges$, gdzie każda wartość to numer wierzchołka, do którego dochodzi $i$-ta krawędź
 	\end{itemize}
-	Listy wierzchołków i krawędzi pozwalają nam na określenie, które wierzchołki sąsiadują ze sobą. Dla implementacji algorytmu LF każdy z wierzchołków powinien być dodatkowo opisany przez trzy parametry:
+	Listy wierzchołków i~krawędzi pozwalają nam na określenie, które wierzchołki sąsiadują ze sobą. Dla implementacji algorytmu LF każdy z~wierzchołków powinien być dodatkowo opisany przez trzy parametry:
 	\begin{itemize}
 		\itemsep0em
 		\item swój stopień $deg(v)$,
 		\item losową wartość $rndvalue(v)$, 
 		\item listę zakazanych kolorów użytych już przez sąsiadów $usedcolor(v)$. 
 	\end{itemize}
-	Dla grafów nieskierowanych stopniem wierzchołka będzie liczba wszystkich incydentnych krawędzi, a tym samym różnica między $i$ i $i+1$ wartością w tablicy wierzchołków. Wartość losowa może zostać wylosowana i przydzielona raz, na początku działania programu. Lista zakazanych kolorów może zostać zastąpiona całkowitą liczbą naturalną oznaczającą następny kolor do wykorzystania (zakładając, że rozpoczynamy od ,,koloru'' 0, a następne określamy przez inkrementację). Parametry te można utożsamić z wierzchołkami przy wykorzystaniu funkcji \texttt{nvgraphAllocateVertexData} oraz \texttt{nvgraphSetVertexData}.
+	Dla grafów nieskierowanych stopniem wierzchołka będzie liczba wszystkich incydentnych krawędzi, a~tym samym różnica między $i$ i~$i+1$ wartością w~tablicy wierzchołków. Wartość losowa może zostać wylosowana i~przydzielona raz, na początku działania programu. Lista zakazanych kolorów może zostać zastąpiona całkowitą liczbą naturalną oznaczającą następny kolor do wykorzystania (zakładając, że rozpoczynamy od ,,koloru'' 0, a~następne określamy przez inkrementację). Parametry te można utożsamić z~wierzchołkami przy wykorzystaniu funkcji \texttt{nvgraphAllocateVertexData} oraz \texttt{nvgraphSetVertexData}.
 	
 	\section{Projekty testów}
-	Poprawność obu implementacji algorytmu będzie sprawdzana przez dodatkowo zaimplementowaną funkcję, uruchamianą dla wszystkich grafów, na których wykonywane będzie kolorowanie. Zarówno dla wyniku działania implementacji sekwencyjnej jak i równoległej algorytmu, funkcja sprawdzi każdy wierzchołek grafu oraz jego sąsiadów. Jeżeli znalezione zostaną jakiekolwiek dwa sąsiadujące ze sobą wierzchołki, które zostały pokolorowane na ten sam kolor oznaczać to będzie błędną implementację oraz konieczność jej poprawienia. Działanie algorytmu sekwencyjnego i równoległego przetestowane zostanie na grafach dostępnych w internecie między innymi na stronie \url{http://mat.gsia.cmu.edu/COLOR/instances.html}. Testowanie przeprowadzone zostanie dla grafów o liczbie wierzchołków rzędu od kilkudziesiąt do tysiąca, oraz liczbie krawędzi rzędu od kilkudziesiąt do kilkuset tysięcy (jeśli moc obliczeniowa sprzętu podoła takiej ich liczbie). Implementacje porównywane będą ze względu na czas znalezienia rozwiązania oraz liczbę użytych w rozwiązaniu kolorów. Dodatkowo implementacja równoległa sprawdzona zostanie na dwóch kartach graficznych: GForce 920M oraz GForce GT 525M.
-	\section{Założenia programu}
+	Poprawność obu implementacji algorytmu będzie sprawdzana przez dodatkowo zaimplementowaną funkcję, uruchamianą dla wszystkich grafów, na których wykonywane będzie kolorowanie. Zarówno dla wyniku działania implementacji sekwencyjnej jak i~równoległej algorytmu, funkcja sprawdzi każdy wierzchołek grafu oraz jego sąsiadów. Jeżeli znalezione zostaną jakiekolwiek dwa sąsiadujące ze sobą wierzchołki, które zostały pokolorowane na ten sam kolor oznaczać to będzie błędną implementację oraz konieczność jej poprawienia. Działanie algorytmu sekwencyjnego i~równoległego przetestowane zostanie na grafach dostępnych w~internecie między innymi na stronie \url{http://mat.gsia.cmu.edu/COLOR/instances.html}. Testowanie przeprowadzone zostanie dla grafów o~liczbie wierzchołków rzędu od kilkudziesiąt do tysiąca, oraz liczbie krawędzi rzędu od kilkudziesiąt do kilkuset tysięcy (jeśli moc obliczeniowa sprzętu podoła takiej ich liczbie). Implementacje porównywane będą ze względu na czas znalezienia rozwiązania oraz liczbę użytych w~rozwiązaniu kolorów. Dodatkowo implementacja równoległa sprawdzona zostanie na dwóch kartach graficznych: GForce 920M oraz GForce GT 525M.
+	%\section{Założenia programu}
 	
 	\bibliography{bibliografia}
 
  
 %	\begin{table}[H]
-%		\caption{Wartość średnia i mediana dla kolejnych cech w zbiorze uczącym}
+%		\caption{Wartość średnia i~mediana dla kolejnych cech w~zbiorze uczącym}
 %		\label{}
 %		\begin{tabular}{r|c c c c c c c}
 %			 & 2& 3 &4& 5& 6& 7& 8\\
@@ -159,7 +177,7 @@
 %	\begin{figure}[h]
 %		\centering
 %		\includegraphics[width=1\textwidth]{images/wybor_cech.png}
-%		\caption{Wykres wartości cech 2 i 4.}
+%		\caption{Wykres wartości cech 2 i~4.}
 %		\label{24}	
 %	\end{figure}
 
