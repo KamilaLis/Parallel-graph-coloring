@@ -52,69 +52,136 @@
 
 \begin{document}
 	\maketitle
-	W ramach projektu zostanie zaimplementowany algorytm kolorowania grafu w~wersji zwykłej i~równoległej. Sugerując się artykułem \cite{article} postanowiono wykorzystać algorytm LDF (Largest-Degree-First). Wersja równoległa zostanie zrealizowana w~architekturze CUDA przy wykorzystaniu karty graficznej Nvidia.\\
+	W ramach projektu zostanie zaimplementowany algorytm kolorowania grafu w~wersji zwykłej i~równoległej. Sugerując się artykułem \cite{article} postanowiono wykorzystać algorytm LF (Largest-First). Wersja równoległa zostanie zrealizowana w~architekturze CUDA przy wykorzystaniu karty graficznej Nvidia.\\
 	
 	\section{Algorytm kolorowania}
-	Kolorowanie wierzchołków polega na  przydzielaniu kolorów wierzchołkom tak, że by dwa sąsiednie wierzchołki otrzymały różne kolory. Najmniejsza liczba kolorów $k$ nazywana jest liczbą chromatyczną. W~celu reprezentacji pokolorowania przyjęło się oznaczać kolory kolejnymi liczbami naturalnymi. Kolorowanie grafów najczęściej wykorzystywane jest do poszukiwania rozwiązań, w~których unika się konfliktów. Strategie kolorowania grafu zależą od stawianych wymagań. Celem optymalnego kolorowania jest minimalizacja liczby użytych kolorów, podczas gdy kolorowanie zbalansowane dąży do zapewnienia podobnej liczby wierzchołków w~każdym kolorze.
-	\subsection{Sekwencyjny Largest Degree First}
-	Algorytm LF (ang. \textit{Largest-Degree-First}) koloruje wierzchołki w~kolejności zgodnej z~ich stopniami -- wierzchołki są przeglądane i~kolorowane według nierosnących stopni wierzchołkowych. Algorytm ma celu minimalizowanie maksymalnej liczby wykorzystanych kolorów. 
-	
-	Jego podstawowa, sekwencyjna wersja, zakłada następujące kroki dla każdego wierzchołka:
-	\begin{enumerate}
-		\itemsep0em
-		\item przydziel wartość losową oraz określ stopień  wierzchołka,
-		\item sprawdź stopnie jego sąsiadów, jeśli aktualny posiada największy przydziel kolor.
-	\end{enumerate}
-	Konflikty stopni (kilka wierzchołków o tym samym stopniu) rozwiązywane są przez wybór wierzchołka o~największej liczbie losowej.
-	
-	\subsection{Metoda równoległa}
-	Równoległe metody kolorowania grafów są oparte na obserwacji, że każdy niezależny zbiór wierzchołków, czyli taki w~którym nie ma żadnych wierzchołków sąsiadujących ze sobą, może być kolorowany równolegle. Różnice pomiędzy metodami sprowadzają się do sposobu wyboru niezależnego zbioru i~samego kolorowania wierzchołków. Niezależny zbiór wierzchołków jest konstruowany jako podgraf indukowany zawierający jedynie niepokolorowane wierzchołki. Najogólniej procedurę równoległego kolorowania można przedstawić następująco:\\
+	Kolorowanie wierzchołków polega na  przydzielaniu kolorów wierzchołkom tak, żeby dwa sąsiednie wierzchołki otrzymały różne kolory. Najmniejsza liczba kolorów $k$ nazywana jest liczbą chromatyczną. W~celu reprezentacji pokolorowania przyjęło się oznaczać kolory kolejnymi liczbami naturalnymi. Kolorowanie grafów najczęściej wykorzystywane jest do poszukiwania rozwiązań, w~których unika się konfliktów. Strategie kolorowania grafu zależą od stawianych wymagań. Celem optymalnego kolorowania jest minimalizacja liczby użytych kolorów, podczas gdy kolorowanie zbalansowane dąży do zapewnienia podobnej liczby wierzchołków w~każdym kolorze.
+	\subsection{Sekwencyjny Largest First}
+	Algorytm LF (ang. \textit{Largest-First}) koloruje wierzchołki w~kolejności zgodnej z~ich stopniami -- wierzchołki są przeglądane i~kolorowane zachłannie, według nierosnących stopni wierzchołkowych. Algorytm ma na celu minimalizowanie maksymalnej liczby wykorzystanych kolorów. 	
+	Poniżej zamieszczono pseudokod obrazujący kroki algorytmu:
+	\\
+	\\
 	\begin{algorithm}[H]
 		\SetAlgoLined
-%		\KwResult{Write here the result }
-%		initialization\;
-		\While{$|G|>0$}{
-			z grafu $G$ wybierz zbiór niezależnych wierzchołków $U$\;
-			koloruj wszystkie wierzchołki z $U$\;
-			$G:=G-U$\;
-%			\eIf{condition}{
-%				instructions1\;
-%				instructions2\;
-%			}{
-%			instructions3\;
-%		}
+		%		\KwResult{Write here the result }
+		%		initialization\;
+		\For{dla każdego wierzchołka $v \in V$}{
+			Policz stopień $d(v)$.
+		}
+		Posortuj zbiór V nierosnąco według stopni $d$ wierzchołków.
+		\\
+		\For{dla każdego wierzchołka $v \in V$}{
+		$S' = S$
+		\\
+		Aktualizuj $S'$ - wykreśl kolory sąsiadów wierzchołka $v$.
+		\\
+		Pokoloruj $v$ na najmniejszy kolor z $S'$.
+		}
+		\caption{Sekwencyjny Largest-First}
+	\end{algorithm}
+\
+\\
+\\
+		$V$ - zbiór wierzchołków grafu
+		\\
+		$n$ - liczba wszystkich wierzchołków grafu
+		\\
+		$v \in 1,2 ...n$ - pojedyńczy wierzchołek
+		\\
+		$S$ - zbiór wszystkich kolorów, liczba kolorów równa jest liczbie wierzchołków
+		\\
+		$d(v)$ - stopień wierzchołka $v$
+
+	\subsection{Metoda równoległa}
+	Równoległe metody kolorowania grafów są oparte na obserwacji, że każdy niezależny zbiór wierzchołków, czyli taki w~którym nie ma żadnych wierzchołków sąsiadujących ze sobą, może być kolorowany równolegle. Różnice pomiędzy metodami sprowadzają się do sposobu wyboru niezależnego zbioru i~samego kolorowania wierzchołków. Niezależny zbiór wierzchołków jest konstruowany jako podgraf indukowany zawierający jedynie niepokolorowane wierzchołki. Najogólniej procedurę równoległego kolorowania można przedstawić następująco:
+	\\
+	
+\begin{algorithm}[H]
+	\SetAlgoLined
+	%		\KwResult{Write here the result }
+	%		initialization\;
+	\While{$|G|>0$}{
+		z grafu $G$ wybierz zbiór niezależnych wierzchołków $U$\;
+		koloruj wszystkie wierzchołki z $U$\;
+		$G:=G-U$\;
+		%			\eIf{condition}{
+		%				instructions1\;
+		%				instructions2\;
+		%			}{
+		%			instructions3\;
+		%		}
 	}
 	\caption{Kolorowanie równoległe}
 \end{algorithm}
-	\begin{lstlisting}
-	
-	while (|G|>0) do in parallel
-		choose an independent set U from G
-		color all vertices in U
-		G:=G-U
-	end do
-	\end{lstlisting}
-	
-	Do dalszego opisu przyjmijmy nomenklaturę zaproponowaną w~\cite{gis}:\\
-	$U$ -- zbiór niezależnych wierzchołków,\\
-	$W$ -- zbiór niepokolorowanych wierzchołków,\\
-	$X$ -- podzbiór $W$ wierzchołków niebędących sąsiadami żadnego wierzchołka z~$U$.
-	
-	Algorytm LF może zostać zrównoleglony poprzez równoległe znajdowanie zbiorów niezależnych wierzchołków. poprzez wybieranie wierzchołków, których stopnie są lokalnymi maksymami.
-	Reguła konstrukcji zbiorów niezależnych w~przypadku RLF (ang. \textit{Recursive Largest First}) jest następująca: jako pierwszy wierzchołek każdego nowo tworzonego zbioru niezależnego jest wybierany wierzchołek o~największym stopniu w~podgrafie $G[W]$. Następnymi wierzchołkami dołączanymi do zbioru niezależnego są te, które mają najwięcej sąsiadów w~zbiorze $W\verb|\|X$.
-	\begin{lstlisting}
-	
-	while (|G|>0) do
-		for all vertices v in G do in parallel
-			U:={v such that deg(v)>deg(u) for all neighbors u in W\X}
-			for all vertices v' in U do in parallel
-				S:={colors of all neighbors of v'}
-				c(v'):=minimum color not in S
-			end do
-		end do
-		G:=G-U
-	end do
-	\end{lstlisting}
+%	\begin{lstlisting}
+%	
+%	while (|G|>0) do in parallel
+%		choose an independent set U from G
+%		color all vertices in U
+%		G:=G-U
+%	end do
+%	\end{lstlisting}
+\ \\ 
+
+Algorytm LF w wersji zrównoleglonej polega na "równoległym" szukaniu niezależnego zbioru wierzchołków (niekoniecznie jest on maksymalny), wybierając te wierzchołki, które lokalnie są największego stopnia, a następnie kolorowaniu ich. Najpierw przydzielamy każdemu wierzchołkowi losową liczbę oraz obliczamy jego stopień. Następie równolegle sprawdzany jest stopień każdego wierzchołka (każdy wierzchołek rozpatrywany jest w oddzielnym wątku). Jeśli stopień ten jest większy od stopni sąsiadujących wierzchołków, to wierzchołek ten jest włączany do aktualnie tworzonego zbioru niezależnego. W przypadku konfliktu stopni decyduje większa wartość przydzielonej na początku liczby losowej. Po utworzeniu zbioru niezależnego wierzchołki do niego należące są równolegle kolorowane na  najmniejszy kolor, który nie został użyty do pokolorowania ich sąsiadów. W kolejnych iteracjach zbiory niezależne wierzchołków są tworzone z wyłączeniem wierzchołków już pokolorowanych.  
+\\ \\	
+	$V$ - zbiór wierzchołków grafu
+	\\
+	$I$ - aktualny w danej iteracji niezależny zbiór wierzchołków grafu
+	\\
+	$U$ - aktualny w danej iteracji zbiór pozostałych do pokolorowania wierzchołków grafu
+	\\
+	$d(v)$ - stopień wierzchołka $v$
+	\\
+	$n$ - liczba wszystkich wierzchołków grafu
+	\\
+	$v \in 1,2 ...n$ - pojedyńczy wierzchołek
+	\\
+	$S$ - zbiór wszystkich kolorów, liczba kolorów równa jest liczbie wierzchołków
+	\\
+	$x$ - liczba losowa
+	 \\ 
+\begin{algorithm}[H]
+	\SetAlgoLined
+	%		\KwResult{Write here the result }
+	%		initialization\;
+	\For{dla każdego wierzchołka $v \in V$}{
+		Policz stopień $d(v)$.
+		\\
+		Przypisz losową liczbę $x$.
+	}
+	$U = V$
+	\\
+	\While{$|U|>0$}{
+		\For{dla każdego wierzchołka $v \in U$ wykonuj równolegle}{
+			I = \{$v$, takie że $d(v)>d(u)$ dla każdego sąsiada $u$ wierzchołka v, $u \in U$\}	
+			\\
+			\For{ dla każdego wierzchołka $v'\in I$ wykonuj równolegle}{
+				$S' = S$
+				\\
+				Aktualizuj $S'$ - wykreśl kolory sąsiadów wierzchołka $v'$.
+				\\
+				Pokoloruj $v'$ na najmniejszy kolor z $S'$.
+			}
+		}
+		$U=U-I$
+	}
+	\caption{Równoległy Largest-First}
+\end{algorithm}
+
+%	\begin{lstlisting}
+%	
+%	while (|G|>0) do
+%		for all vertices v in G do in parallel
+%			U:={v such that deg(v)>deg(u) for all neighbors u in W\X}
+%			for all vertices v' in U do in parallel
+%				S:={colors of all neighbors of v'}
+%				c(v'):=minimum color not in S
+%			end do
+%		end do
+%		G:=G-U
+%	end do
+%	\end{lstlisting}
 %For ecient implementation on distributed
 %memory parallel computers, the information must also be local in the processor grid , so
 %that the amount of communication is minimized. This means that the distribution of the
