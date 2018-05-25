@@ -193,7 +193,7 @@ Algorytm LF w wersji zrównoleglonej polega na "równoległym" szukaniu niezale�
 
  
 	\section{Struktury danych}
-	Pierwszym krokiem do rozwiązania problemu kolorowania grafu jest znalezienie odpowiedniej struktury danych najlepiej opisującej strukturę grafu. W~artykule \cite{Shen2017} autorzy sugerują wykorzystanie macierzy sąsiedztwa jako odpowiedniej reprezentacji dla skomplikowanych algorytmów. Natomiast w~\cite{SINGH20155} zauważono, że macierz sąsiedztwa marnuje dużo pamięci w~przypadku ,,rzadkiego'' grafu, dlatego lista sąsiedztwa byłaby lepszym sposobem reprezentacji takiego grafu. W~GPU CUDA uzyskuje dostęp do pamięci w~tablicy, więc z~powodu różnej wielkości listy krawędzi trudnej jest korzystać z~listy sąsiedztwa. Możliwym rozwiązaniem jest wykorzystanie biblioteki nvGRAPH napisanej z~myślą o~algorytmach grafowych. Struktura grafowa jest zależna od wybranej topologii. Przykładowo:
+	Pierwszym krokiem do rozwiązania problemu kolorowania grafu jest znalezienie odpowiedniej struktury danych najlepiej opisującej strukturę grafu. W~artykule \cite{Shen2017} autorzy sugerują wykorzystanie macierzy sąsiedztwa jako odpowiedniej reprezentacji dla skomplikowanych algorytmów. Natomiast w~\cite{SINGH20155} zauważono, że macierz sąsiedztwa marnuje dużo pamięci w~przypadku ,,rzadkiego'' grafu, dlatego lista sąsiedztwa byłaby lepszym sposobem reprezentacji takiego grafu. W~GPU CUDA uzyskuje dostęp do pamięci w~tablicy, więc z~powodu różnej wielkości listy krawędzi trudnej jest korzystać z~listy sąsiedztwa. Możliwym rozwiązaniem jest wykorzystanie biblioteki nvGRAPH \cite{nvgraph} napisanej z~myślą o~algorytmach grafowych. Struktura grafowa jest zależna od wybranej topologii. Przykładowo, dla formatu CSR (\textit{compressed sparse row}):
 	\begin{lstlisting}
 	
 	struct nvgraphCSRTopology32I_st {
@@ -209,17 +209,17 @@ Algorytm LF w wersji zrównoleglonej polega na "równoległym" szukaniu niezale�
 		\itemsep0em
 		\item \texttt{nvertices} -- liczba wierzchołków grafu
 		\item \texttt{nedges} -- liczba krawędzi grafu
-		\item \texttt{source\_offsets} -- tablica o~rozmiarze $nvertices+1$ , gdzie $i$-ty element to numer indeksu pierwszej z~krawędzi wychodzących z~tego wierzchołka w~tablicy krawędzi $destination\_indices$; ostatni element przechowuje liczbę wszystkich krawędzi
+		\item \texttt{source\_offsets} -- tablica o~rozmiarze $nvertices+1$ , gdzie $i$-ty element to numer indeksu pierwszej z~krawędzi wychodzących z~$i$-tego wierzchołka w~tablicy krawędzi $destination\_indices$; ostatni element przechowuje liczbę wszystkich krawędzi
 		\item \texttt{destination\_indices} -- tablica o~rozmiarze $nedges$, gdzie każda wartość to numer wierzchołka, do którego dochodzi $i$-ta krawędź
 	\end{itemize}
 	Listy wierzchołków i~krawędzi pozwalają nam na określenie, które wierzchołki sąsiadują ze sobą. Dla implementacji algorytmu LF każdy z~wierzchołków powinien być dodatkowo opisany przez trzy parametry:
 	\begin{itemize}
 		\itemsep0em
 		\item swój stopień $deg(v)$,
-		\item losową wartość $rndvalue(v)$, 
-		\item listę zakazanych kolorów użytych już przez sąsiadów $usedcolor(v)$. 
+		\item losową wartość, 
+		\item kolor. 
 	\end{itemize}
-	Dla grafów nieskierowanych stopniem wierzchołka będzie liczba wszystkich incydentnych krawędzi, a~tym samym różnica między $i$ i~$i+1$ wartością w~tablicy wierzchołków. Wartość losowa może zostać wylosowana i~przydzielona raz, na początku działania programu. Lista zakazanych kolorów może zostać zastąpiona całkowitą liczbą naturalną oznaczającą następny kolor do wykorzystania (zakładając, że rozpoczynamy od ,,koloru'' 0, a~następne określamy przez inkrementację). Parametry te można utożsamić z~wierzchołkami przy wykorzystaniu funkcji \texttt{nvgraphAllocateVertexData} oraz \texttt{nvgraphSetVertexData}.
+	Dla grafów nieskierowanych stopniem wierzchołka będzie liczba wszystkich incydentnych krawędzi, a~tym samym różnica między $i$ i~$i+1$ wartością w~tablicy \texttt{source\_offsets}. Wartość losowa może zostać wylosowana i~przydzielona raz, na początku działania programu. Kolor może zostać opisany całkowitą liczbą naturalną (zakładając, że $-1$ oznacza brak przydzielonego koloru, rozpoczynamy od ,,koloru'' 0, a~następne określamy przez inkrementację). Parametry te można utożsamić z~wierzchołkami przy wykorzystaniu funkcji \texttt{nvgraphAllocateVertexData} oraz \texttt{nvgraphSetVertexData}.
 	
 	\section{Projekty testów}
 	Poprawność obu implementacji algorytmu będzie sprawdzana przez dodatkowo zaimplementowaną funkcję, uruchamianą dla wszystkich grafów, na których wykonywane będzie kolorowanie. Zarówno dla wyniku działania implementacji sekwencyjnej jak i~równoległej algorytmu, funkcja sprawdzi każdy wierzchołek grafu oraz jego sąsiadów. Jeżeli znalezione zostaną jakiekolwiek dwa sąsiadujące ze sobą wierzchołki, które zostały pokolorowane na ten sam kolor oznaczać to będzie błędną implementację oraz konieczność jej poprawienia. Działanie algorytmu sekwencyjnego i~równoległego przetestowane zostanie na grafach dostępnych w~internecie między innymi na stronie \url{http://mat.gsia.cmu.edu/COLOR/instances.html}. Testowanie przeprowadzone zostanie dla grafów o~liczbie wierzchołków rzędu od kilkudziesiąt do tysiąca, oraz liczbie krawędzi rzędu od kilkudziesiąt do kilkuset tysięcy (jeśli moc obliczeniowa sprzętu podoła takiej ich liczbie). Implementacje porównywane będą ze względu na czas znalezienia rozwiązania oraz liczbę użytych w~rozwiązaniu kolorów. Dodatkowo implementacja równoległa sprawdzona zostanie na dwóch kartach graficznych: GForce 920M oraz GForce GT 525M.
