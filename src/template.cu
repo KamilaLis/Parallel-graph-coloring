@@ -40,7 +40,7 @@ graphCSR_t read_graph_DIMACS_ascii(char *file);
 ////////////////////////////////////////////////////////////////////////////////
 __global__ void
 colorLFkernel(int n, int c, int* source_offsets, int* destination_indices,
-			  int* colors, int* randoms, int* out_colors)
+			  int* colors, int* randoms, int* degrees, int* out_colors)
 {
 	const int idx = threadIdx.x+blockIdx.x*blockDim.x;
 
@@ -51,19 +51,19 @@ colorLFkernel(int n, int c, int* source_offsets, int* destination_indices,
 		if ((colors[idx] != -1)) return;
 
 		int ir = randoms[idx];
-//		printf("my random: %d\n", ir);
+		int ideg = degrees[idx];
 
 		// look at neighbors to check their random number
 		for (int k = source_offsets[idx]; k < source_offsets[idx+1]; k++) {
-		// ignore nodes colored earlier (and yourself)
-		int j = destination_indices[k];
-		int jc = colors[j];
-		if ((jc != -1) || (idx == j)) continue;
-
-		int jr = randoms[j];
-//		printf("neighbour random:%d\n", jr);
-		if (ir <= jr) f=false;
-	}
+			// ignore nodes colored earlier (and yourself)
+			int j = destination_indices[k];
+			int jc = colors[j];
+			if ((jc != -1) || (idx == j)) continue;
+			if (ideg < degrees[j]) f=false;
+			if (ideg == degrees[j]){
+				if (ir <= randoms[j]) f=false;
+			}
+		}
 	__syncthreads();
 
 	// assign color if you have the maximum random number
@@ -81,30 +81,30 @@ colorLFkernel(int n, int c, int* source_offsets, int* destination_indices,
 int
 main(int argc, char **argv)
 {
-//    // znajdz GPU
-//    int cuda_device = 0;
-//    cuda_device = findCudaDevice(argc, (const char **)argv);
-//    cudaDeviceProp deviceProp;
-//    checkCudaErrors(cudaGetDevice(&cuda_device));
-//    checkCudaErrors(cudaGetDeviceProperties(&deviceProp, cuda_device));
-//    printf("> Detected Compute SM %d.%d hardware with %d multi-processors\n",
-//           deviceProp.major, deviceProp.minor, deviceProp.multiProcessorCount);
+    // znajdz GPU
+    int cuda_device = 0;
+    cuda_device = findCudaDevice(argc, (const char **)argv);
+    cudaDeviceProp deviceProp;
+    checkCudaErrors(cudaGetDevice(&cuda_device));
+    checkCudaErrors(cudaGetDeviceProperties(&deviceProp, cuda_device));
+    printf("> Detected Compute SM %d.%d hardware with %d multi-processors\n",
+           deviceProp.major, deviceProp.minor, deviceProp.multiProcessorCount);
 
 
 	graphCSR_t graph = read_graph_DIMACS_ascii("/home/klis/STUDIA/8sem/GIS/projekt/Parallel-graph-coloring/data/test.col");
 
-//
-//    StopWatchInterface *timer = 0;
-//    sdkCreateTimer(&timer);
-//    sdkStartTimer(&timer);
+
+    StopWatchInterface *timer = 0;
+    sdkCreateTimer(&timer);
+    sdkStartTimer(&timer);
 
     // let's color
 	colorLF(graph);
 
 
-//    sdkStopTimer(&timer);
-//    printf("Processing time: %f (ms)\n", sdkGetTimerValue(&timer));
-//    sdkDeleteTimer(&timer);
+    sdkStopTimer(&timer);
+    printf("Processing time: %f (ms)\n", sdkGetTimerValue(&timer));
+    sdkDeleteTimer(&timer);
 
     return EXIT_SUCCESS;
 }
@@ -137,8 +137,7 @@ colorLF(graphCSR_t graph)
     	// przydzielenie wartosci losowej - na razie indeks
     	randoms[i] = i;
     	// okreslenie stopni wierzcholkow
-    	degrees_h[i] = source_offsets_h[i+1]-source_offsets_h[i]
-    					+count_occur(destination_indices_h, q, i);
+    	degrees_h[i] = source_offsets_h[i+1]-source_offsets_h[i];
     }
 
     // inicjalizacja zmiennych GPU (device)
@@ -147,7 +146,7 @@ colorLF(graphCSR_t graph)
     int *out_colors_d;
 
     checkCudaErrors(cudaMalloc((void **) &source_offsets_d, (n+1)*sizeof(int)));
-    checkCudaErrors(cudaMalloc((void **) &destination_indices_d, q*sizeof(int)));
+    checkCudaErrors(cudaMalloc((void **) &destination_indices_d, (2*q)*sizeof(int)));
     checkCudaErrors(cudaMalloc((void **) &colors_d, (n)*sizeof(int)));
     checkCudaErrors(cudaMalloc((void **) &out_colors_d, (n)*sizeof(int)));
     checkCudaErrors(cudaMalloc((void **) &randoms_d, (n)*sizeof(int)));
@@ -156,7 +155,7 @@ colorLF(graphCSR_t graph)
     // kopiowanie na GPU
     checkCudaErrors(cudaMemcpy(source_offsets_d, source_offsets_h, (n+1)*sizeof(int),
                                cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaMemcpy(destination_indices_d, destination_indices_h, q*sizeof(int),
+    checkCudaErrors(cudaMemcpy(destination_indices_d, destination_indices_h, 2*q*sizeof(int),
                                cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(colors_d, colors_h, (n)*sizeof(int),
                                cudaMemcpyHostToDevice));
@@ -186,6 +185,7 @@ colorLF(graphCSR_t graph)
     											 destination_indices_d,
     											 colors_d,
     											 randoms_d,
+    											 degrees_d,
     											 out_colors_d);
 
     	++c;
@@ -207,4 +207,10 @@ colorLF(graphCSR_t graph)
     free(destination_indices_h);
     free(randoms);
     free(colors_h);
+    checkCudaErrors(cudaFree(source_offsets_d));
+    checkCudaErrors(cudaFree(destination_indices_d));
+    checkCudaErrors(cudaFree(colors_d));
+    checkCudaErrors(cudaFree(randoms_d));
+    checkCudaErrors(cudaFree(degrees_d));
+    checkCudaErrors(cudaFree(out_colors_d));
 }

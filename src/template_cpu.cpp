@@ -47,33 +47,31 @@ graphCSR_t read_graph_DIMACS_ascii(char *file)
 	get_params();
 
     source_offsets_h = (int*) malloc((Nr_vert+1)*sizeof(int));
-    destination_indices_h = (int*) malloc(Nr_edges*sizeof(int));
+    destination_indices_h = (int*) malloc((2*Nr_edges)*sizeof(int));
     source_offsets_h[0] = 0;
-    source_offsets_h[Nr_vert] = Nr_edges;
+    source_offsets_h[Nr_vert] = 2*Nr_edges;
 
-	while ((c = fgetc(fp)) != EOF){
-		switch (c)
-		  {
-			case 'e':
-			  if (!fscanf(fp, "%d %d", &i, &j))
-				{ printf("ERROR: corrupted inputfile\n"); exit(10); }
-			  // poniewaz graf jest nieskierowany
-			  // bierzemy tylko czesc macierzy sasiedztwa nad diagonala
-			  if (i < j){
-				  destination_indices_h[line_idx] = j-1;
-				  if((i-1)!=old_i){
-					  offset_idx++;
-					  source_offsets_h[offset_idx] = source_offsets_h[offset_idx-1]+nnz;
-					  nnz = 0;
-					  old_i = i-1;
-				  }
-				  nnz++;
-				  line_idx++;
-			  }
-			  break;
-			case '\n':
-			default: break;
-		  }
+    while ((c = fgetc(fp)) != EOF){
+    	switch (c)
+    	{
+    		case 'e':
+    			if (!fscanf(fp, "%d %d", &i, &j))
+    			{ printf("ERROR: corrupted inputfile\n"); exit(10); }
+    			// poniewaz graf jest nieskierowany
+    			// tablica krawedzi jest 2x wieksza
+    			destination_indices_h[line_idx] = j-1;
+    			if((i-1)!=old_i){
+    				offset_idx++;
+    				source_offsets_h[offset_idx] = source_offsets_h[offset_idx-1]+nnz;
+    				nnz = 0;
+    				old_i = i-1;
+    			}
+    			nnz++;
+    			line_idx++;
+    			break;
+    		case '\n':
+    		default: break;
+		}
 	}
 
 	offset_idx++;
@@ -83,7 +81,7 @@ graphCSR_t read_graph_DIMACS_ascii(char *file)
 //	printf("source_offsets_h\n");
 //	for (i = 0; i<Nr_vert+1; i++)  printf("%d\n",source_offsets_h[i]); printf("\n");
 //	printf("destination_indices_h\n");
-//	for (i = 0; i<Nr_edges; i++)  printf("%d\n",destination_indices_h[i]); printf("\n");
+//	for (i = 0; i<2*Nr_edges; i++)  printf("%d\n",destination_indices_h[i]); printf("\n");
 
 	graph->nvertices = Nr_vert;
 	graph->nedges = Nr_edges;
