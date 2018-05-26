@@ -21,7 +21,7 @@ int Nr_vert, Nr_edges;
 
 graphCSR_t read_graph_DIMACS_ascii(char *file);
 int get_params();
-
+int count_occur(int a[], int num_elements, int value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //!
@@ -33,7 +33,7 @@ graphCSR_t read_graph_DIMACS_ascii(char *file)
 	int i,j, nnz=0, old_i=0;
     int line_idx = 0, offset_idx = 0;
 	FILE *fp;
-	graphCSR_t graph;
+	graphCSR_t graph = (graphCSR_t) malloc(sizeof(struct graphCSR_st));
 	int *source_offsets_h, *destination_indices_h;
 
 	if ( (fp=fopen(file,"r"))==NULL )
@@ -45,7 +45,6 @@ graphCSR_t read_graph_DIMACS_ascii(char *file)
 	ungetc(c, fp);
 	*pp = '\0';
 	get_params();
-	printf("Nr_vert:%d, Nr_edges:%d\n", Nr_vert, Nr_edges);
 
     source_offsets_h = (int*) malloc((Nr_vert+1)*sizeof(int));
     destination_indices_h = (int*) malloc(Nr_edges*sizeof(int));
@@ -69,26 +68,29 @@ graphCSR_t read_graph_DIMACS_ascii(char *file)
 					  old_i = i-1;
 				  }
 				  nnz++;
+				  line_idx++;
 			  }
 			  break;
-			case '\n': line_idx++; break;
+			case '\n':
 			default: break;
 		  }
-
 	}
+
 	offset_idx++;
 	source_offsets_h[offset_idx] = source_offsets_h[offset_idx-1]+nnz;
 	fclose(fp);
 
-	for (i = 0; i<Nr_vert+1; i++)  printf("%d\n",source_offsets_h[i]); printf("\n");
+//	printf("source_offsets_h\n");
+//	for (i = 0; i<Nr_vert+1; i++)  printf("%d\n",source_offsets_h[i]); printf("\n");
+//	printf("destination_indices_h\n");
+//	for (i = 0; i<Nr_edges; i++)  printf("%d\n",destination_indices_h[i]); printf("\n");
 
 	graph->nvertices = Nr_vert;
 	graph->nedges = Nr_edges;
 	graph->source_offsets = source_offsets_h;
 	graph->destination_indices = destination_indices_h;
 
-    for (i = 0; i<Nr_vert+1; i++)  printf("%d\n",graph->source_offsets[i]); printf("\n");
-
+	printf("> Graph loaded.\n");
 	return graph;
 }
 
@@ -131,5 +133,19 @@ int get_params()
 
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+//!
+////////////////////////////////////////////////////////////////////////////////
+int count_occur(int a[], int num_elements, int value)
+{
+    int i, count = 0;
+    for (i = 0; i < num_elements; i++)
+    {
+        if (a[i] == value)
+        {
+            ++count;
+        }
+    }
+    return (count);
+}
 
