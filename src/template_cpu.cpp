@@ -1,0 +1,135 @@
+// includes, system
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+
+#define MAX_PREAMBLE 10000
+
+// struktura grafu
+struct graphCSR_st {
+  int nvertices;
+  int nedges;
+  int *source_offsets;
+  int *destination_indices;
+};
+typedef struct graphCSR_st *graphCSR_t;
+
+static char Preamble[MAX_PREAMBLE];
+int Nr_vert, Nr_edges;
+
+
+graphCSR_t read_graph_DIMACS_ascii(char *file);
+int get_params();
+
+
+////////////////////////////////////////////////////////////////////////////////
+//!
+////////////////////////////////////////////////////////////////////////////////
+graphCSR_t read_graph_DIMACS_ascii(char *file)
+{
+	int c, oc;
+	char * pp = Preamble;
+	int i,j, nnz=0, old_i=0;
+    int line_idx = 0, offset_idx = 0;
+	FILE *fp;
+	graphCSR_t graph;
+	int *source_offsets_h, *destination_indices_h;
+
+	if ( (fp=fopen(file,"r"))==NULL )
+	  { printf("ERROR: Cannot open infile\n"); exit(10); }
+
+	for(oc = '\0' ;(c = fgetc(fp)) != EOF && (oc != '\n' || c != 'e')
+		; oc = *pp++ = c);
+
+	ungetc(c, fp);
+	*pp = '\0';
+	get_params();
+	printf("Nr_vert:%d, Nr_edges:%d\n", Nr_vert, Nr_edges);
+
+    source_offsets_h = (int*) malloc((Nr_vert+1)*sizeof(int));
+    destination_indices_h = (int*) malloc(Nr_edges*sizeof(int));
+    source_offsets_h[0] = 0;
+    source_offsets_h[Nr_vert] = Nr_edges;
+
+	while ((c = fgetc(fp)) != EOF){
+		switch (c)
+		  {
+			case 'e':
+			  if (!fscanf(fp, "%d %d", &i, &j))
+				{ printf("ERROR: corrupted inputfile\n"); exit(10); }
+			  // poniewaz graf jest nieskierowany
+			  // bierzemy tylko czesc macierzy sasiedztwa nad diagonala
+			  if (i < j){
+				  destination_indices_h[line_idx] = j-1;
+				  if((i-1)!=old_i){
+					  offset_idx++;
+					  source_offsets_h[offset_idx] = source_offsets_h[offset_idx-1]+nnz;
+					  nnz = 0;
+					  old_i = i-1;
+				  }
+				  nnz++;
+			  }
+			  break;
+			case '\n': line_idx++; break;
+			default: break;
+		  }
+
+	}
+	offset_idx++;
+	source_offsets_h[offset_idx] = source_offsets_h[offset_idx-1]+nnz;
+	fclose(fp);
+
+	for (i = 0; i<Nr_vert+1; i++)  printf("%d\n",source_offsets_h[i]); printf("\n");
+
+	graph->nvertices = Nr_vert;
+	graph->nedges = Nr_edges;
+	graph->source_offsets = source_offsets_h;
+	graph->destination_indices = destination_indices_h;
+
+    for (i = 0; i<Nr_vert+1; i++)  printf("%d\n",graph->source_offsets[i]); printf("\n");
+
+	return graph;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//! getting Nr_vert and Nr_edge from the preamble string "p ??? num num"
+////////////////////////////////////////////////////////////////////////////////
+int get_params()
+{
+	char c, *tmp;
+	char * pp = Preamble;
+	int stop = 0;
+	tmp = (char *)calloc(100, sizeof(char));
+
+	Nr_vert = Nr_edges = 0;
+
+	while (!stop && (c = *pp++) != '\0'){
+		switch (c)
+		  {
+			case 'c':
+			  while ((c = *pp++) != '\n' && c != '\0');
+			  break;
+
+			case 'p':
+			  sscanf(pp, "%s %d %d\n", tmp, &Nr_vert, &Nr_edges);
+			  stop = 1;
+			  break;
+
+			default:
+			  break;
+		  }
+	}
+
+	free(tmp);
+
+	if (Nr_vert == 0 || Nr_edges == 0)
+	  return 0;  /* error */
+	else
+	  return 1;
+
+}
+
+
+
