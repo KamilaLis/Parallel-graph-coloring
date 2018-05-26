@@ -44,35 +44,33 @@ colorLFkernel(int n, int c, int* source_offsets, int* destination_indices,
 {
 	const int idx = threadIdx.x+blockIdx.x*blockDim.x;
 
-	bool f=true; // true if f you have max random
+	bool has_max_deg=true;
 
 	if(idx < n){
-		// ignore nodes colored earlier
+		// ignoruj, jesli wierzcholek jest juz pokolorowany
 		if ((colors[idx] != -1)) return;
 
 		int ir = randoms[idx];
 		int ideg = degrees[idx];
 
-		// look at neighbors to check their random number
+		// sprawdz stopnie sasiadow
 		for (int k = source_offsets[idx]; k < source_offsets[idx+1]; k++) {
-			// ignore nodes colored earlier (and yourself)
+			// ignoruj pokolorowane wierzcholki i siebie
 			int j = destination_indices[k];
 			int jc = colors[j];
 			if ((jc != -1) || (idx == j)) continue;
-			if (ideg < degrees[j]) f=false;
+			if (ideg < degrees[j]) has_max_deg=false;
 			if (ideg == degrees[j]){
-				if (ir <= randoms[j]) f=false;
+				if (ir <= randoms[j]) has_max_deg=false;
 			}
 		}
 	__syncthreads();
 
-	// assign color if you have the maximum random number
-	if (f) colors[idx] = c;
+	// przydziel kolor
+	if (has_max_deg) colors[idx] = c;
 	out_colors[idx] = colors[idx];
 	__syncthreads();
 	}
-//	int i;
-//    for (i = 0; i<n; i++)  printf("%d\n",colors[i]); printf("\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,9 +96,7 @@ main(int argc, char **argv)
     sdkCreateTimer(&timer);
     sdkStartTimer(&timer);
 
-    // let's color
 	colorLF(graph);
-
 
     sdkStopTimer(&timer);
     printf("Processing time: %f (ms)\n", sdkGetTimerValue(&timer));
@@ -127,7 +123,6 @@ colorLF(graphCSR_t graph)
     colors_h = (int*) malloc((n)*sizeof(int));
     randoms = (int*) malloc((n)*sizeof(int));
     degrees_h = (int*) malloc((n)*sizeof(int));
-    // allocate mem for the result on host side
     out_colors_h = (int*) malloc((n)*sizeof(int));
 
 
@@ -189,7 +184,7 @@ colorLF(graphCSR_t graph)
     											 out_colors_d);
 
     	++c;
-        // copy result from device to host
+        // kopiuj wynik z GPU
         checkCudaErrors(cudaMemcpy(out_colors_h, out_colors_d, (n)*sizeof(int),
                                    cudaMemcpyDeviceToHost));
         if(count_occur(out_colors_h, n, -1) == 0) break;
