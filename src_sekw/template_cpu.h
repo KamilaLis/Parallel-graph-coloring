@@ -25,10 +25,27 @@ int Nr_vert, Nr_edges;
 graphCSR_t read_graph_DIMACS_ascii(char *file);
 int get_params();
 int count_occur(int a[], int num_elements, int value);
+bool checkIfCorrect(graphCSR_st* graph, int *colors_h, int *degrees);
 
-////////////////////////////////////////////////////////////////////////////////
-//!
-////////////////////////////////////////////////////////////////////////////////
+#include "template_cpu.h"
+
+// Funkcja sprawdzająca poprawność kolorowania
+bool checkIfCorrect(graphCSR_st* graph, int *colors_h, int *degrees){
+	
+	bool correct = true;
+	int d;
+
+	for(int i = 0; i < graph->nvertices; i++){
+		d = degrees[i];
+
+		//sprawdza każdego kolor każdego sąsiada dla każdego z wierzchołków
+		for(int a = 0; a < d; a++){
+    		if(colors_h[graph->destination_indices[graph->source_offsets[i]+a]] == colors_h[i]) correct = false;
+    	}
+	}
+	return correct;
+}
+
 graphCSR_t read_graph_DIMACS_ascii(char *file)
 {
 	int c, oc;
@@ -149,7 +166,5 @@ int count_occur(int a[], int num_elements, int value)
     }
     return (count);
 }
-
-
 
 #endif
