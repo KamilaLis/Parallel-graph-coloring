@@ -1,20 +1,18 @@
 /*
  * Katarzyna Dziewulska, Kamila Lis
- * Kolorowanie grafu metoda LF
+ * Kolorowanie grafu metoda LF (Largest First)
  */
 
 #define MAX_THREATS_PER_BLOCK 1024
 
-// includes, system
+// system
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 
-// includes CUDA
+// CUDA
 #include <cuda_runtime.h>
-
-// includes, project
 #include <helper_cuda.h>
 #include <helper_functions.h>
 

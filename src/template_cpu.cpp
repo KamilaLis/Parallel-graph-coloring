@@ -1,3 +1,7 @@
+/*
+`* Funkcje pomocnicze dla kolorowania grafu
+`*/
+
 // includes, system
 #include <stdlib.h>
 #include <stdio.h>
