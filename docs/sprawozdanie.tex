@@ -194,7 +194,7 @@ Algorytm LF w wersji zrównoleglonej polega na "równoległym" szukaniu niezale�
  
 	\section{Struktury danych}
 	Pierwszym krokiem do rozwiązania problemu kolorowania grafu jest znalezienie odpowiedniej struktury danych najlepiej opisującej strukturę grafu. W~artykule \cite{Shen2017} autorzy sugerują wykorzystanie macierzy sąsiedztwa jako odpowiedniej reprezentacji dla skomplikowanych algorytmów. Natomiast w~\cite{SINGH20155} zauważono, że macierz sąsiedztwa marnuje dużo pamięci w~przypadku ,,rzadkiego'' grafu, dlatego lista sąsiedztwa byłaby lepszym sposobem reprezentacji takiego grafu. W~GPU CUDA uzyskuje dostęp do pamięci w~tablicy, więc z~powodu różnej wielkości listy krawędzi trudnej jest korzystać z~listy sąsiedztwa. Możliwym rozwiązaniem jest wykorzystanie biblioteki nvGRAPH \cite{nvgraph} napisanej z~myślą o~algorytmach grafowych. Struktura grafowa jest zależna od wybranej topologii. Przykładowo, dla formatu CSR (\textit{compressed sparse row}):
-	\begin{lstlisting}
+	\begin{lstlisting}[caption={Struktura formatu CSR z biblioteki nvGRAPH.}]
 	
 	struct nvgraphCSRTopology32I_st {
 		int nvertices;
@@ -227,19 +227,33 @@ Algorytm LF w wersji zrównoleglonej polega na "równoległym" szukaniu niezale�
 	
 	\section{Etap 3}
 	\subsection{Struktury danych - aktualizacja}
+	Podczas implementacji algorytmu zdecydowano się zrezygnować z biblioteki nvGRAPH do przechowywania grafu, ponieważ funkcje tej biblioteki okazały się nieprzydatne w implementacji. Zachowano jednak format CSR przechowywania grafu, dla którego powstała struktura analogiczna do tej z biblioteki nvGRAPH zamieszczonej na listingu 1. Struktura formatu CSR jest to skrócony zapis macierzy sąsiedztwa. Zawiera ona dwie zmienne przechowujące liczbę wierzchołków i liczbę krawędzi, oraz dwie tablice jednowymiarowe. Tablica \textit{destination\_indices} przechowuje zapisane w ciągu numery sąsiadów każdego z wierzchołków, rozpoczynając od najmniejszego wierzchołka. Z kolei tablica \textit{source\_offsets} zawiera indeksy tablicy \textit{destination\_indices} od których rozpoczynają się sąsiedzi kolejnych wierzchołków. Indeksy tablicy \textit{source\_offsets} to numery wierzchołków. Tak więc dla wierzchołka np. nr $0$ wartość $source\_offsets[0]$ będzie indeksem dla tablicy $destination\_indices$, od którego zaczynają się numery jego sąsiadów.
 	
 	\subsection{Wyniki testów}
+	Obie implementacje algorytmu były testowane na grafach o różnej liczbie wierzchołków i krawędzi. Dla każdego grafu zostało wykonane dziesięć prób kolorowania algorytmem w wersji sekwencyjnej i dziesięć prób algorytmem w wersji równoległej. Następnie została policzona średnia czasów wykonywania algorytmów oraz liczby przydzielonych kolorów. Testy algorytmów zostały wykonane na CPU (parametry). W wersji równoległej wykorzystano dodatkowo kartę graficzną GForce 920M, zdolność obliczeniowa 3.5, 2 multi-procesory. Docelowo testy miały być przeprowadzone także dla karty graficznej GForce GT 525M, jednak nie udało się uruchomić na niej potrzebnych narzędzi. Oba algorytmy porównywane były pod względem liczby wykorzystanych kolorów oraz czasu wykonywania. Wyniki testów zamieszczone zostały w tabeli poniżej. Niektóre znalezione do testów grafy zawierały informacje o optymalnym kolorowaniu, które również zamieszczono w tabeli. Poprawność kolorowania sprawdzona została specjalnie napisaną funkcją \verb|CheckIfCorrect|. Wyniki funkcji zostały przedstawione w kolumnie \textit{czy poprawnie?} w tabeli poniżej.
 	
-	
-	\begin{tabular}{|r|l|} \hline
-		7C0 & heksadecymalnie \\
-		3700 & oktalnie \\
-		11111000000 & binarnie \\
-		\hline \hline
-		1984 & dziesietnie \\ \hline
+	\begin{center}
+	\hspace*{-1.5cm}	
+	\begin{tabular}{|p{2cm}|p{1.7cm}|p{1.5cm}|p{1.5cm}|p{1.5cm}|p{1.5cm}|p{1.5cm}|p{1.5cm}|p{1.5cm}|} \hline
+		\textbf{wierzchołki} & \textbf{krawędzie} & \multicolumn{3}{|c|}{\textbf{LF - sekwencyjny}} & \multicolumn{3}{|c|}{\textbf{LF - równoległy}} & optymalne kolorowanie \\
+		\hline
+		 & & czy poprawnie? & liczba kolorów & czas kolorowania & czy poprawnie? & liczba kolorów & czas kolorowania & \\
+		 \hline
+		 $138$ & $986$ & tak & $11$ & $0.761$ ms & tak & $19$ & $2.368$ ms & $11$ \\
+		\hline	
+		$169$ & $6656$ & tak & $20$ & $0.870$ ms & tak & $97$ & $36.139$ ms & $13$ \\	 
+		\hline		
+		$256$ & $12640$ & tak & $26$ & $0.649$ ms & tak & $144$ & $57.164$ ms & ? \\
+		\hline
 	\end{tabular}
-	
+	\end{center}
+		
 	\subsection{Wnioski}
+	
+	Wszystkie testowane grafy zostały poprawnie pokolorowane dla obu wersji algorytmu. Zauważyć można, że algorytm w wersji sekwencyjnej wykorzystuje mniej kolorów niż algorytm w wersji równoległej, jednak nie zawsze znalezione rozwiązanie jest optymalne. Wynik taki był spodziewany, ponieważ algorytm sekwencyjny wybierając kolor dla wierzchołka bierze pod uwagę cały graf, natomiast algorytm równoległy wykonuje to samo jednak w każdej iteracji przetwarzając jedynie niezależny zbiór wierzchołków grafu, przez co wykorzystywane jest więcej kolorów. Jako że algorytm w wersji równoległej koloruje jednocześnie kilka wierzchołków, spodziewać by się mogło, że będzie on działał szybciej niż ten w wersji sekwencyjnej. Dla testowanych grafów jednak algorytm równoległy znalazł wynik w dłuższym czasie niż sekwencyjny. Z powodu braku danych oraz ograniczonych możliwości sprzętowych nie przetestowano działania algorytmów na większych grafach (o liczbie wierzchołków rzędu np. kilkuset tysięcy), jednak przypuszcza się, że dla bardzo dużych grafów czas kolorowania algorytmu równoległego będzie mniejszy, ponieważ wykorzystana będzie tak duża liczba wątków (każdy wierzchołek w oddzielnym wątku), że spowoduje to sumarycznie szybsze wykonanie algorytmu kolorowania. Z powyższej tabeli wynika, że algorytm równoległy działa znacznie szybciej dla grafów rzadkich (o niewielkiej liczbie krawędzi). Wniosek z powyższych rozważań jest taki, że jeżeli zależy nam na jak najmniejszej liczbie kolorów wykorzystywanych do kolorowania to należy wybrać wersję sekwencyjną. Jeśli chodzi o jak najszybsze pokolorowanie wtedy w zależności od liczby wierzchołków i krawędzi wybieramy tą wersje algorytmu, która działa lepiej.
+	
+	\subsection{Perspektywy przyśpieszenia algorytmu równoległego}
+	Jedną z możliwości przyśpieszenia działania algorytmu równoległego jest zastąpienie równoczesnego uruchamiania funkcji kolorującej w oddzielnym wątku, dla każdego wierzchołka na kilkukrotne wykonanie funkcji dla wielu wierzchołków z wykorzystaniem tych samych wątków. Taka zmiana powinna pozwolić na zmniejszenie czasu działania, ponieważ koszt uruchomienia nowego wątku jest stosunkowo duży. W ramach projektu nie wykonano testów dla tego podejścia dla zachowania czytelności kodu.
 	
 	\bibliography{bibliografia}
 
