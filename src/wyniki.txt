@@ -1,0 +1,5 @@
+
+                seq-col     seq-time     par-col    par-time            opt-col
+queen13_13.col  20          0.87 ms      97         36.139 (ms)         13          (v=169, e=6656)
+queen16_16.col  26          0.649 ms     144        57.164 (ms)         ?           (v=256, e=12640)
+anna.col        11          0.761 ms     19         6.736000 (ms)       11          (v=138, e=986)

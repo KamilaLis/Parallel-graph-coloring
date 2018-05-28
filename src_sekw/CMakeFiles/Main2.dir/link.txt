@@ -1,1 +1,0 @@
-/usr/bin/c++    --std=c++11 -Wall -pedantic -Wextra -Wno-unused-variable   CMakeFiles/Main2.dir/main_moze_lepsze.cpp.o  -o Main2 -rdynamic 

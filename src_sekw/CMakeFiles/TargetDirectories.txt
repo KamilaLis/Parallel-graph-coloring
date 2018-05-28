@@ -1,4 +1,0 @@
-/home/elaine/Desktop/Parallel-graph-coloring/src_sekw/CMakeFiles/edit_cache.dir
-/home/elaine/Desktop/Parallel-graph-coloring/src_sekw/CMakeFiles/rebuild_cache.dir
-/home/elaine/Desktop/Parallel-graph-coloring/src_sekw/CMakeFiles/Main2.dir
-/home/elaine/Desktop/Parallel-graph-coloring/src_sekw/CMakeFiles/Main.dir

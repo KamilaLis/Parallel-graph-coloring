@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete resource &apos;parallel-graph-coloring&apos;" deleteContents="true" description="Delete resource &apos;parallel-graph-coloring&apos;" element1="/parallel-graph-coloring" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1527071408596"/>
+</session>
