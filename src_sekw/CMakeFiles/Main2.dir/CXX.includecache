@@ -1,0 +1,34 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/elaine/Desktop/Parallel-graph-coloring/src_sekw/main_moze_lepsze.cpp
+cstdlib
+-
+string
+-
+iostream
+-
+vector
+-
+algorithm
+-
+template_cpu.h
+/home/elaine/Desktop/Parallel-graph-coloring/src_sekw/template_cpu.h
+
+/home/elaine/Desktop/Parallel-graph-coloring/src_sekw/template_cpu.h
+stdlib.h
+-
+stdio.h
+-
+string.h
+-
+math.h
+-
+template_cpu.h
+/home/elaine/Desktop/Parallel-graph-coloring/src_sekw/template_cpu.h
+

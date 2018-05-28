@@ -111,6 +111,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named Main2
+
+# Build rule for target.
+Main2: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 Main2
+.PHONY : Main2
+
+# fast build rule for target.
+Main2/fast:
+	$(MAKE) -f CMakeFiles/Main2.dir/build.make CMakeFiles/Main2.dir/build
+.PHONY : Main2/fast
+
+#=============================================================================
 # Target rules for targets named Main
 
 # Build rule for target.
@@ -150,6 +163,33 @@ main.cpp.s:
 	$(MAKE) -f CMakeFiles/Main.dir/build.make CMakeFiles/Main.dir/main.cpp.s
 .PHONY : main.cpp.s
 
+main_moze_lepsze.o: main_moze_lepsze.cpp.o
+
+.PHONY : main_moze_lepsze.o
+
+# target to build an object file
+main_moze_lepsze.cpp.o:
+	$(MAKE) -f CMakeFiles/Main2.dir/build.make CMakeFiles/Main2.dir/main_moze_lepsze.cpp.o
+.PHONY : main_moze_lepsze.cpp.o
+
+main_moze_lepsze.i: main_moze_lepsze.cpp.i
+
+.PHONY : main_moze_lepsze.i
+
+# target to preprocess a source file
+main_moze_lepsze.cpp.i:
+	$(MAKE) -f CMakeFiles/Main2.dir/build.make CMakeFiles/Main2.dir/main_moze_lepsze.cpp.i
+.PHONY : main_moze_lepsze.cpp.i
+
+main_moze_lepsze.s: main_moze_lepsze.cpp.s
+
+.PHONY : main_moze_lepsze.s
+
+# target to generate assembly for a file
+main_moze_lepsze.cpp.s:
+	$(MAKE) -f CMakeFiles/Main2.dir/build.make CMakeFiles/Main2.dir/main_moze_lepsze.cpp.s
+.PHONY : main_moze_lepsze.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -158,10 +198,14 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... Main2"
 	@echo "... Main"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... main_moze_lepsze.o"
+	@echo "... main_moze_lepsze.i"
+	@echo "... main_moze_lepsze.s"
 .PHONY : help
 
 

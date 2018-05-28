@@ -60,6 +60,43 @@ CMAKE_SOURCE_DIR = /home/elaine/Desktop/Parallel-graph-coloring/src_sekw
 CMAKE_BINARY_DIR = /home/elaine/Desktop/Parallel-graph-coloring/src_sekw
 
 #=============================================================================
+# Target rules for target CMakeFiles/Main2.dir
+
+# All Build rule for target.
+CMakeFiles/Main2.dir/all:
+	$(MAKE) -f CMakeFiles/Main2.dir/build.make CMakeFiles/Main2.dir/depend
+	$(MAKE) -f CMakeFiles/Main2.dir/build.make CMakeFiles/Main2.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/elaine/Desktop/Parallel-graph-coloring/src_sekw/CMakeFiles --progress-num=3,4 "Built target Main2"
+.PHONY : CMakeFiles/Main2.dir/all
+
+# Include target in all.
+all: CMakeFiles/Main2.dir/all
+
+.PHONY : all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/Main2.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/elaine/Desktop/Parallel-graph-coloring/src_sekw/CMakeFiles 2
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/Main2.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/elaine/Desktop/Parallel-graph-coloring/src_sekw/CMakeFiles 0
+.PHONY : CMakeFiles/Main2.dir/rule
+
+# Convenience name for target.
+Main2: CMakeFiles/Main2.dir/rule
+
+.PHONY : Main2
+
+# clean rule for target.
+CMakeFiles/Main2.dir/clean:
+	$(MAKE) -f CMakeFiles/Main2.dir/build.make CMakeFiles/Main2.dir/clean
+.PHONY : CMakeFiles/Main2.dir/clean
+
+# clean rule for target.
+clean: CMakeFiles/Main2.dir/clean
+
+.PHONY : clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/Main.dir
 
 # All Build rule for target.
