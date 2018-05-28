@@ -29,6 +29,7 @@ typedef struct graphCSR_st *graphCSR_t;
 void colorLF(graphCSR_t graph);
 int count_occur(int a[], int num_elements, int value);
 int maxValue(int a[], int num_elements);
+bool checkIfCorrect(graphCSR_st* graph, int *colors_h, int *degrees);
 graphCSR_t read_graph_DIMACS_ascii(char *file);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,9 +46,10 @@ graphCSR_t read_graph_DIMACS_ascii(char *file);
 ////////////////////////////////////////////////////////////////////////////////
 __global__ void
 colorLFkernel(int n, int c, int* source_offsets, int* destination_indices,
-			  int* colors, int* randoms, int* degrees, int* out_colors)
-{
-	const int idx = threadIdx.x+blockIdx.x*blockDim.x;
+			  int* colors, int* randoms, int* degrees, 
+              int* neighbours_colors_flags)
+{   
+    const int idx = threadIdx.x+blockIdx.x*blockDim.x;
 
 	bool has_max_deg=true;
 
@@ -63,7 +65,11 @@ colorLFkernel(int n, int c, int* source_offsets, int* destination_indices,
 			// ignoruj pokolorowane wierzcholki i siebie
 			int j = destination_indices[k];
 			int jc = colors[j];
-			if ((jc != -1) || (idx == j)) continue;
+			if (jc != -1){ // sasiad jest juz pokolorowany
+                neighbours_colors_flags[jc]=1;
+                continue;
+            } 
+            if (idx == j) continue;
 			if (ideg < degrees[j]) has_max_deg=false;
 			if (ideg == degrees[j]){
 				if (ir <= randoms[j]) has_max_deg=false;
@@ -71,9 +77,20 @@ colorLFkernel(int n, int c, int* source_offsets, int* destination_indices,
 		}
 	__syncthreads();
 
-	// przydziel kolor
-	if (has_max_deg) colors[idx] = c;
-	out_colors[idx] = colors[idx];
+	    // przydziel kolor
+        if (has_max_deg) {
+            // for(int a = 0; a < ideg; a++){
+            //     neighbours_colors_flags[colors[destination_indices[source_offsets[idx]+a]]]=1;
+            // }
+        //znajdź wektor kolorów sąsiadów
+            for(int b = 0; b < n; b++){
+                if(neighbours_colors_flags[b] == 0){
+                    colors[idx] = b; 
+                    break;
+                }
+            }    
+            // out_colors[idx] = colors[idx];
+        }
 	__syncthreads();
 	}
 }
@@ -131,6 +148,7 @@ colorLF(graphCSR_t graph)
 		*destination_indices_h = graph->destination_indices;
 
 	int i, c, *colors_h, *out_colors_h, *randoms, *degrees_h;
+    int *neighbours_colors_flags_h;
 	int num_threads, num_blocks;
 
     // inicjalizacja zmiennych CPU (host)
@@ -138,6 +156,7 @@ colorLF(graphCSR_t graph)
     randoms = (int*) malloc((n)*sizeof(int));
     degrees_h = (int*) malloc((n)*sizeof(int));
     out_colors_h = (int*) malloc((n)*sizeof(int));
+    neighbours_colors_flags_h = (int*) malloc((n)*sizeof(int));
 
 
     for(i = 0; i < n; i++){
@@ -147,11 +166,13 @@ colorLF(graphCSR_t graph)
     	randoms[i] = i;
     	// okreslenie stopni wierzcholkow
     	degrees_h[i] = source_offsets_h[i+1]-source_offsets_h[i];
+        // inicjalizacja zerami
+        neighbours_colors_flags_h[i] = 0;
     }
 
     // inicjalizacja zmiennych GPU (device)
     int *source_offsets_d, *destination_indices_d;
-    int *colors_d, *randoms_d, *degrees_d;
+    int *colors_d, *randoms_d, *degrees_d, *neighbours_colors_flags_d;
     int *out_colors_d;
 
     checkCudaErrors(cudaMalloc((void **) &source_offsets_d, (n+1)*sizeof(int)));
@@ -160,6 +181,7 @@ colorLF(graphCSR_t graph)
     checkCudaErrors(cudaMalloc((void **) &out_colors_d, (n)*sizeof(int)));
     checkCudaErrors(cudaMalloc((void **) &randoms_d, (n)*sizeof(int)));
     checkCudaErrors(cudaMalloc((void **) &degrees_d, (n)*sizeof(int)));
+    checkCudaErrors(cudaMalloc((void **) &neighbours_colors_flags_d, (n)*sizeof(int)));
 
     // kopiowanie na GPU
     checkCudaErrors(cudaMemcpy(source_offsets_d, source_offsets_h, (n+1)*sizeof(int),
@@ -172,6 +194,8 @@ colorLF(graphCSR_t graph)
                                cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(degrees_d, degrees_h, (n)*sizeof(int),
                                cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(neighbours_colors_flags_d, neighbours_colors_flags_h, (n)*sizeof(int),
+                            cudaMemcpyHostToDevice));
 
     // liczba watkow i blokow
     if(n > MAX_THREATS_PER_BLOCK){
@@ -195,21 +219,23 @@ colorLF(graphCSR_t graph)
     											 colors_d,
     											 randoms_d,
     											 degrees_d,
-    											 out_colors_d);
+                                                 neighbours_colors_flags_d);
 
     	++c;
+        cudaDeviceSynchronize();
         // kopiuj wynik z GPU
-        checkCudaErrors(cudaMemcpy(out_colors_h, out_colors_d, (n)*sizeof(int),
+        checkCudaErrors(cudaMemcpy(colors_h, colors_d, (n)*sizeof(int),
                                    cudaMemcpyDeviceToHost));
-        if(count_occur(out_colors_h, n, -1) == 0) break;
+        if(count_occur(colors_h, n, -1) == 0) break;
     }
 	// zaczekaj na wyniki obliczen GPU
 	cudaDeviceSynchronize();
 
     // wyswietlenie wyniku
     printf("Computed colors:\n");
-    for (i = 0; i<n; i++)  printf("%d\n",out_colors_h[i]); printf("\n");
-    printf("Number of used colors: %d\n", maxValue(out_colors_h, n));
+    for (i = 0; i<n; i++)  printf("%d\n",colors_h[i]); printf("\n");
+    printf("Number of used colors: %d\n", maxValue(colors_h, n));
+    printf("Correct:%d\n", (int)checkIfCorrect(graph, colors_h, degrees_h));
     printf("\n> Done!\n");
 
     // sprzatanie
@@ -217,10 +243,12 @@ colorLF(graphCSR_t graph)
     free(destination_indices_h);
     free(randoms);
     free(colors_h);
+    free(neighbours_colors_flags_h);
     checkCudaErrors(cudaFree(source_offsets_d));
     checkCudaErrors(cudaFree(destination_indices_d));
     checkCudaErrors(cudaFree(colors_d));
     checkCudaErrors(cudaFree(randoms_d));
     checkCudaErrors(cudaFree(degrees_d));
     checkCudaErrors(cudaFree(out_colors_d));
+    checkCudaErrors(cudaFree(neighbours_colors_flags_d));
 }

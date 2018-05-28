@@ -27,6 +27,7 @@ graphCSR_t read_graph_DIMACS_ascii(char *file);
 int get_params();
 int count_occur(int a[], int num_elements, int value);
 int maxValue(int a[], int num_elements);
+bool checkIfCorrect(graphCSR_st* graph, int *colors_h, int *degrees);
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Funkcja wczytujaca graf z formatu DIMACS (.col) do struktury 
@@ -166,3 +167,17 @@ int maxValue(int a[], int num_elements)
     return maxValue;
 }
 
+bool checkIfCorrect(graphCSR_st* graph, int *colors_h, int *degrees)
+{
+	bool correct = true;
+	int d;
+
+	for(int i = 0; i < graph->nvertices; i++){
+		d = degrees[i];
+		//vector kolorów sąsiadów
+		for(int a = 0; a < d; a++){
+    		if(colors_h[graph->destination_indices[graph->source_offsets[i]+a]] == colors_h[i]) correct = false;
+    	}
+	}
+	return correct;
+}
