@@ -30,13 +30,19 @@ typedef struct graphCSR_st *graphCSR_t;
 
 void colorLF(graphCSR_t graph);
 int count_occur(int a[], int num_elements, int value);
-
 graphCSR_t read_graph_DIMACS_ascii(char *file);
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-//!
+//! Funkcja kolorowania wykonywana na GPU
+//! (wykonywana dla kazdego wierzcholka przez oddzielny watek)
+//! @param n                liczba wierzcholkow grafu
+//! @param c                aktualny (najmniejszy) kolor
+//! @param source_offsets   -> patrz struktura grafu
+//! @param destination_indices
+//! @param colors           kolory do tej pory przydzielone wierzcholkom
+//! @param randoms          liczby losowe przydzielone wierzcholkom
+//! @param degrees          stopnie wierzcholkow
+//! @param out_colors       wartosc zwracana - kolory przydzielone wierzcholkom
 ////////////////////////////////////////////////////////////////////////////////
 __global__ void
 colorLFkernel(int n, int c, int* source_offsets, int* destination_indices,
@@ -74,11 +80,19 @@ colorLFkernel(int n, int c, int* source_offsets, int* destination_indices,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Program main
+// main
 ////////////////////////////////////////////////////////////////////////////////
 int
 main(int argc, char **argv)
 {
+    // wczytaj nazwe pliku .col
+    char* f;
+    if(!getCmdLineArgumentString(argc, (const char **)argv,"file=",&f)){
+        printf("> Path to file required as command-line argument.\n");
+        printf("> Waiving.\n");
+        exit(EXIT_WAIVED);
+    }
+
     // znajdz GPU
     int cuda_device = 0;
     cuda_device = findCudaDevice(argc, (const char **)argv);
@@ -88,9 +102,8 @@ main(int argc, char **argv)
     printf("> Detected Compute SM %d.%d hardware with %d multi-processors\n",
            deviceProp.major, deviceProp.minor, deviceProp.multiProcessorCount);
 
-
-	graphCSR_t graph = read_graph_DIMACS_ascii("/home/klis/STUDIA/8sem/GIS/projekt/Parallel-graph-coloring/data/test.col");
-
+    // wczytaj graf
+	graphCSR_t graph = read_graph_DIMACS_ascii(f);
 
     StopWatchInterface *timer = 0;
     sdkCreateTimer(&timer);
@@ -106,7 +119,9 @@ main(int argc, char **argv)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//!
+//! Funkcja kolorująca graf wykonywana na CPU 
+//! (uruchamia funkcje wykonywana na GPU -> colorLFkernel)
+//! @param graph    struktura grafu do kolorowania
 ////////////////////////////////////////////////////////////////////////////////
 void
 colorLF(graphCSR_t graph)

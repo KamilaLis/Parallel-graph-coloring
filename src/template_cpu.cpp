@@ -24,7 +24,8 @@ int get_params();
 int count_occur(int a[], int num_elements, int value);
 
 ////////////////////////////////////////////////////////////////////////////////
-//!
+//! Funkcja wczytujaca graf z formatu DIMACS (.col) do struktury 
+//! @param file		path to .col file
 ////////////////////////////////////////////////////////////////////////////////
 graphCSR_t read_graph_DIMACS_ascii(char *file)
 {
@@ -78,11 +79,6 @@ graphCSR_t read_graph_DIMACS_ascii(char *file)
 	source_offsets_h[offset_idx] = source_offsets_h[offset_idx-1]+nnz;
 	fclose(fp);
 
-//	printf("source_offsets_h\n");
-//	for (i = 0; i<Nr_vert+1; i++)  printf("%d\n",source_offsets_h[i]); printf("\n");
-//	printf("destination_indices_h\n");
-//	for (i = 0; i<2*Nr_edges; i++)  printf("%d\n",destination_indices_h[i]); printf("\n");
-
 	graph->nvertices = Nr_vert;
 	graph->nedges = Nr_edges;
 	graph->source_offsets = source_offsets_h;
@@ -94,7 +90,7 @@ graphCSR_t read_graph_DIMACS_ascii(char *file)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//! getting Nr_vert and Nr_edge from the preamble string "p ??? num num"
+//! Funkcja odczytujaca liczbe wierzcholkow i krawedzi z preambuly
 ////////////////////////////////////////////////////////////////////////////////
 int get_params()
 {
@@ -132,7 +128,10 @@ int get_params()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//!
+//! Funkcja zliczajaca liczbe wystapien liczby w tablicy
+//! @param a[]			tablica, w ktorej zliczane beda wystapienia
+//! @param num_elements	rozmiar tablicy
+//! @param value		poszukiwana liczba
 ////////////////////////////////////////////////////////////////////////////////
 int count_occur(int a[], int num_elements, int value)
 {
