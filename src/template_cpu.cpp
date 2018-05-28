@@ -26,6 +26,7 @@ int Nr_vert, Nr_edges;
 graphCSR_t read_graph_DIMACS_ascii(char *file);
 int get_params();
 int count_occur(int a[], int num_elements, int value);
+int maxValue(int a[], int num_elements);
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Funkcja wczytujaca graf z formatu DIMACS (.col) do struktury 
@@ -140,13 +141,28 @@ int get_params()
 int count_occur(int a[], int num_elements, int value)
 {
     int i, count = 0;
-    for (i = 0; i < num_elements; i++)
-    {
-        if (a[i] == value)
-        {
+    for (i = 0; i < num_elements; i++){
+        if (a[i] == value){
             ++count;
         }
     }
     return (count);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//! Funkcja zwracaja najwieksza wartosc w tablicy
+//! @param a[]			tablica, w ktorej poszukiwana jest maksymalna wartosc
+//! @param num_elements	rozmiar tablicy
+////////////////////////////////////////////////////////////////////////////////
+int maxValue(int a[], int num_elements) 
+{
+    int i;
+    int maxValue = a[0];
+    for (i = 1; i < num_elements; ++i) {
+        if ( a[i] > maxValue ) {
+            maxValue = a[i];
+        }
+    }
+    return maxValue;
 }
 

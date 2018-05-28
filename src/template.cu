@@ -1,6 +1,6 @@
 /*
  * Katarzyna Dziewulska, Kamila Lis
- * Kolorowanie grafu metoda LF (Largest First)
+ * Równoległe kolorowanie grafu metoda LF (Largest First)
  */
 
 #define MAX_THREATS_PER_BLOCK 1024
@@ -28,6 +28,7 @@ typedef struct graphCSR_st *graphCSR_t;
 
 void colorLF(graphCSR_t graph);
 int count_occur(int a[], int num_elements, int value);
+int maxValue(int a[], int num_elements);
 graphCSR_t read_graph_DIMACS_ascii(char *file);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,6 +209,7 @@ colorLF(graphCSR_t graph)
     // wyswietlenie wyniku
     printf("Computed colors:\n");
     for (i = 0; i<n; i++)  printf("%d\n",out_colors_h[i]); printf("\n");
+    printf("Number of used colors: %d\n", maxValue(out_colors_h, n));
     printf("\n> Done!\n");
 
     // sprzatanie
